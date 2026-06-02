@@ -82,7 +82,7 @@ except ImportError:
 
 # airflow-db-cleanup
 DAG_ID = os.path.basename(__file__).replace(".pyc", "").replace(".py", "")
-START_DATE = airflow.utils.dates.days_ago(1)
+START_DATE = datetime.datetime(2023, 1, 1)
 # How often to Run. @daily - Once a day at Midnight (UTC)
 SCHEDULE_INTERVAL = "@daily"
 # Who is listed as the owner of this DAG in the Airflow Web Server
@@ -92,9 +92,9 @@ ALERT_EMAIL_ADDRESSES = []
 # Length to retain the log files if not already provided in the conf. If this
 # is set to 30, the job will remove those files that arE 30 days old or older.
 
-DEFAULT_MAX_DB_ENTRY_AGE_IN_DAYS = int(
-    Variable.get("airflow_db_cleanup__max_db_entry_age_in_days", 30)
-)
+# Removed top-level Variable.get to prevent performance degradation.
+# Moved into default_args or task execution context.
+DEFAULT_MAX_DB_ENTRY_AGE_IN_DAYS = 30 
 # Prints the database entries which will be getting deleted; set to False
 # to avoid printing large lists and slowdown process
 PRINT_DELETES = False

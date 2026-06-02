@@ -28,7 +28,7 @@ from airflow.utils.dates import days_ago
 with models.DAG(
     "example_gcp_gke",
     schedule_interval=None,  # Override to match your needs
-    start_date=days_ago(1),
+    start_date=models.datetime(2023, 1, 1),
     tags=["example"],
 ) as dag:
     # TODO(developer): update with your values
