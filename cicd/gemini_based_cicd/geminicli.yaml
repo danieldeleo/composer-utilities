@@ -92,6 +92,9 @@ steps:
         # Enable exit-on-error mode
         set -eo pipefail
         
+        # Symlink the .agents directory to the project root so gemini can discover the skills
+        ln -sf cicd/gemini_based_cicd/.agents .agents
+
         gemini --yolo --prompt "/skills list"
         gemini --yolo --prompt "Optimize the Airflow DAGs and run local tests"
         # gemini --yolo --prompt "Run local tests using the cicd/gemini_based_cicd/.agents/skills/local-airflow-unit-tests/SKILL.md skill"
