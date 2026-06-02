@@ -102,7 +102,7 @@ steps:
       - 'MODEL_ID=${_MODEL_ID}'
       - 'GEMINI_CLI_TRUST_WORKSPACE=true'
   - id: 'Commit and push changes'
-    name: 'ghcr.io/cli/cli:latest'
+    name: 'gemini-cli-with-docker'
     entrypoint: 'bash'
     secretEnv: ['GITHUB_TOKEN']
     args:
