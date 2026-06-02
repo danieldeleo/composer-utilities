@@ -21,11 +21,11 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     default_args={
         "retries": 10,
-        "retry_delay": datetime.timedelta(seconds=10),
+        "retry_delay": datetime.timedelta(minutes=1),
     },
 )
 def sleepy_pod():
@@ -42,7 +42,8 @@ def sleepy_pod():
             """,
         ],
         env_vars={"AIRFLOW_RETRY_NUMBER": "{{ task_instance.try_number }}"},
-        image="gcr.io/google.com/cloudsdktool/cloud-sdk:latest",
+        # Using a specific version instead of 'latest' for reproducibility.
+        image="gcr.io/google.com/cloudsdktool/cloud-sdk:472.0.0-slim",
         namespace="composer-user-workloads",
         # Specifies path to kubernetes config. The config_file is templated.
         config_file="/home/airflow/composer_kube_config",

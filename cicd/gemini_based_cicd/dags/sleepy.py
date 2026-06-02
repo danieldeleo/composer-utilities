@@ -22,12 +22,12 @@ from kubernetes.client import models as k8s
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     max_active_tasks=100,
     default_args={
         "retries": 10,
-        "retry_delay": datetime.timedelta(seconds=10),
+        "retry_delay": datetime.timedelta(minutes=1),
     },
 )
 def sleepy():
@@ -58,7 +58,8 @@ def sleepy():
             arguments=kpo_args["arguments"],
             env_vars={"AIRFLOW_RETRY_NUMBER": "{{ task_instance.try_number }}"},
             namespace="composer-user-workloads",
-            image="teradata/tpt:latest",
+            # Using a specific version instead of 'latest' for reproducibility.
+            image="teradata/tpt:17.20.00.00",
             config_file="/home/airflow/composer_kube_config",
             kubernetes_conn_id="kubernetes_default",
             container_resources=k8s.V1ResourceRequirements(
