@@ -100,6 +100,7 @@ steps:
       - 'GOOGLE_CLOUD_PROJECT=${_MODEL_PROJECT_ID}'
       - 'GOOGLE_CLOUD_LOCATION=${_MODEL_LOCATION}'
       - 'MODEL_ID=${_MODEL_ID}'
+      - 'GEMINI_CLI_TRUST_WORKSPACE=true'
   - id: 'Commit and push changes'
     name: 'ghcr.io/cli/cli:latest'
     entrypoint: 'bash'
