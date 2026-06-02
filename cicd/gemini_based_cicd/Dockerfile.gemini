@@ -7,13 +7,14 @@ FROM node:20
 # Copy ONLY the docker CLI binary from the docker image
 COPY --from=docker-cli /usr/local/bin/docker /usr/local/bin/
 
-# Install necessary dependencies for gemini-cli keychain, git, and curl
+# Install necessary dependencies for gemini-cli keychain, git, curl, and ripgrep
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libsecret-1-dev \
     gnome-keyring \
     git \
     curl \
     ca-certificates \
+    ripgrep \
     && rm -rf /var/lib/apt/lists/*
 
 # Install GitHub CLI (gh)
@@ -33,6 +34,7 @@ RUN npm install -g @google/gemini-cli@latest \
     && docker --version \
     && git --version \
     && gh --version \
+    && rg --version \
     && gemini --version
 
 # Set up a working directory
