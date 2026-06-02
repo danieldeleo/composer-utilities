@@ -150,5 +150,5 @@ timeout: 14400s # 4 hours
 
 availableSecrets:
   secretManager:
-    - versionName: projects/$PROJECT_ID/secrets/github-token/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/composer-utilities-github-token/versions/latest
       env: 'GITHUB_TOKEN'
