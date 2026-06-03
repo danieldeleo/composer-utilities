@@ -87,10 +87,10 @@ if __name__ == "__main__":
         workspace_path = (
             "/workspace"
             if os.path.exists("/workspace")
-            else os.path.dirname(os.path.dirname(script_dir))
+            else os.path.dirname(script_dir)
         )
         with open(
-            os.path.join(workspace_path, "cicd/gemini_based_cicd/composer_version.txt"),
+            os.path.join(workspace_path, "cicd/composer_version.txt"),
             "r",
         ) as f:
             image_version = f.read().strip()
