@@ -90,7 +90,8 @@ if __name__ == "__main__":
             else os.path.dirname(os.path.dirname(script_dir))
         )
         with open(
-            os.path.join(workspace_path, "cicd/gemini_based_cicd/composer_version.txt"), "r"
+            os.path.join(workspace_path, "cicd/gemini_based_cicd/composer_version.txt"),
+            "r",
         ) as f:
             image_version = f.read().strip()
         tag = get_docker_image_tag_from_image_version(image_version)

@@ -30,7 +30,7 @@ from kubernetes.client import models as k8s
         "retry_delay": datetime.timedelta(seconds=10),
     },
 )
-def sleepy():
+def sleepy_dynamic_task_mapping():
     @task
     def get_sleepy_minutes():
         return [1, 1, 1, 1, 1]
@@ -58,7 +58,7 @@ def sleepy():
             arguments=kpo_args["arguments"],
             env_vars={"AIRFLOW_RETRY_NUMBER": "{{ task_instance.try_number }}"},
             namespace="composer-user-workloads",
-            image="teradata/tpt:latest",
+            image="gcr.io/google.com/cloudsdktool/google-cloud-cli:latest",
             config_file="/home/airflow/composer_kube_config",
             kubernetes_conn_id="kubernetes_default",
             container_resources=k8s.V1ResourceRequirements(
@@ -71,12 +71,10 @@ def sleepy():
                     "memory": "64Mi",
                 },
             ),
-            # Increase pod startup timeout to 10 minutes
-            startup_timeout_seconds=600,
         )
 
     sleep_for.expand(minutes=get_sleepy_minutes())
 
 
 # Instantiate the DAG
-sleepy()
+sleepy_dynamic_task_mapping()

@@ -28,7 +28,7 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
         "retry_delay": datetime.timedelta(seconds=10),
     },
 )
-def sleepy_pod():
+def sleepy_kubernetes_pod_operator():
     KubernetesPodOperator(
         task_id="sleep",
         cmds=["bash"],
@@ -51,4 +51,4 @@ def sleepy_pod():
     )
 
 
-sleepy_pod()
+sleepy_kubernetes_pod_operator()
