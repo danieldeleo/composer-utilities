@@ -14,3 +14,9 @@ Takes in a Composer environment and analyzes the DAGs for compatibility with Com
 ## [Cloud Composer DAGs Parsing Profiler Tool](./composer_parsing_profiler)
 Profiles DAG parsing for a Composer Environment. This tool helps you optimize parsing latency, including top-level code detection
 
+## [Cloud Composer CI/CD Pipeline](./cicd)
+A template and sample configuration for establishing a CI/CD pipeline for Cloud Composer. It features:
+* **Linting & Formatting**: Checks using Ruff.
+* **Automated Testing**: Runs unit and integration tests against local Airflow instances inside a Composer-matching environment.
+* **Deployment**: Automatically syncs DAGs, data files, and dependencies (`requirements.txt`) to Cloud Composer environments upon successful validation.
+* **Agentic Remediation**: An optional setup using Gemini CLI to automatically analyze, fix, and propose PRs for DAG failures or optimizations.
