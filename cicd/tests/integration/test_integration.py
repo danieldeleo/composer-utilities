@@ -194,14 +194,11 @@ def trigger_and_wait_for_dag(dag_id: str, conf: dict = None):
     assert state == "success", f"DAG {dag_id} failed with state: {state}"
 
 
-# def test_custom_parallel_task_group_example_execution():
-#     """Triggers the custom_parallel_task_group_example DAG and verifies it completes successfully."""
-#     trigger_and_wait_for_dag("custom_parallel_task_group_example")
+def test_sleepy_kubernetes_pod_operator_execution():
+    """Triggers the sleepy_kubernetes_pod_operator DAG and verifies it completes successfully."""
+    trigger_and_wait_for_dag("sleepy_kubernetes_pod_operator")
 
 
-def test_custom_sleepy_task_group_example_execution():
-    """Triggers the custom_sleepy_task_group_example DAG and verifies it completes successfully."""
-    trigger_and_wait_for_dag(
-        "custom_sleepy_task_group_example",
-        conf={"seconds_to_sleep": 1, "number_of_sleepy_tasks": 1},
-    )
+def test_sleepy_dynamic_task_mapping_execution():
+    """Triggers the sleepy_dynamic_task_mapping DAG and verifies it completes successfully."""
+    trigger_and_wait_for_dag("sleepy_dynamic_task_mapping")
