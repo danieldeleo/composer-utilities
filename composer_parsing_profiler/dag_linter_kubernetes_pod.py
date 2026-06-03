@@ -373,6 +373,10 @@ with DAG(
     start_date=pendulum.datetime(2025, 8, 6, tz="UTC"),
     schedule=None,  # Triggered manually/on-demand
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     tags=["profiler", "troubleshooting", "gcp-composer"],
     doc_md=__doc__,  # Use the module docstring as DAG documentation
 ) as dag:
