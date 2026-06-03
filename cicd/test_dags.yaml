@@ -40,7 +40,7 @@ steps:
 
       # Install requested testing requirements using the captured constraints to avoid dependency conflicts
       pip install --no-cache-dir --user \
-        --requirement /workspace/cicd/dags/requirements.txt \
+        --requirement /workspace/dags/requirements.txt \
         --constraint /tmp/constraints.txt
 
       # In Airflow 3, some internal components (like the Simple Auth Manager) may attempt to initialize 
@@ -51,7 +51,7 @@ steps:
 
       # Set basic auth if testing Airflow 2 
       export AIRFLOW__API__AUTH_BACKENDS=airflow.api.auth.backend.basic_auth
-      export AIRFLOW__CORE__DAGS_FOLDER=/workspace/cicd/dags
+      export AIRFLOW__CORE__DAGS_FOLDER=/workspace/dags
       
       # Start Airflow standalone in the background
       airflow standalone > /dev/null &
@@ -71,7 +71,7 @@ steps:
       airflow dags list
 
       # Run pytest to execute the tests in the workspace
-      python3 -m pytest -vv -s /workspace/cicd/tests
+      python3 -m pytest -vv -s /workspace/tests
 options:
   machineType: 'E2_HIGHCPU_32'
   logging: CLOUD_LOGGING_ONLY
