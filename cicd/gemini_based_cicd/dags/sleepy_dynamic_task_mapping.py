@@ -22,7 +22,7 @@ from kubernetes.client import models as k8s
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     max_active_tasks=100,
     default_args={
@@ -58,7 +58,7 @@ def sleepy_dynamic_task_mapping():
             arguments=kpo_args["arguments"],
             env_vars={"AIRFLOW_RETRY_NUMBER": "{{ task_instance.try_number }}"},
             namespace="composer-user-workloads",
-            image="gcr.io/google.com/cloudsdktool/google-cloud-cli:latest",
+            image="gcr.io/google.com/cloudsdktool/google-cloud-cli:472.0.0",
             config_file="/home/airflow/composer_kube_config",
             kubernetes_conn_id="kubernetes_default",
             container_resources=k8s.V1ResourceRequirements(

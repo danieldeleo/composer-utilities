@@ -18,10 +18,11 @@ import datetime
 import pendulum
 from airflow.decorators import dag
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from kubernetes.client import models as k8s
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     default_args={
         "retries": 10,
@@ -42,12 +43,24 @@ def sleepy_kubernetes_pod_operator():
             """,
         ],
         env_vars={"AIRFLOW_RETRY_NUMBER": "{{ task_instance.try_number }}"},
-        image="gcr.io/google.com/cloudsdktool/google-cloud-cli:latest",
+        # Pinning to a specific version for reproducibility
+        image="gcr.io/google.com/cloudsdktool/google-cloud-cli:472.0.0",
         namespace="composer-user-workloads",
         # Specifies path to kubernetes config. The config_file is templated.
         config_file="/home/airflow/composer_kube_config",
         # Identifier of connection that should be used
         kubernetes_conn_id="kubernetes_default",
+        # Adding container resources is a best practice to ensure predictable performance
+        container_resources=k8s.V1ResourceRequirements(
+            requests={
+                "cpu": "100m",
+                "memory": "64Mi",
+            },
+            limits={
+                "cpu": "100m",
+                "memory": "64Mi",
+            },
+        ),
     )
 
 
