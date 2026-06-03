@@ -17,7 +17,6 @@ from pathlib import Path
 
 import pytest
 from airflow.models import DagBag
-from pendulum.tz.timezone import Timezone
 
 PARSING_DURATION_THRESHOLD = 10.0
 
@@ -57,50 +56,32 @@ def test_all_dags_have_start_date(dagbag):
         assert dag.start_date is not None, f"DAG {dag_id} does not have a start_date."
 
 
-def test_sleepy_dag(dagbag):
-    dag = dagbag.get_dag("sleepy")
-    assert dag is not None, "DAG sleepy not found."
-    assert len(dag.tasks) == 3, "DAG sleepy should contain 3 tasks."
-
-
-# def test_custom_task_group_example(dagbag):
-#     dag = dagbag.get_dag("custom_task_group_example")
-#     assert dag is not None, "DAG custom_task_group_example not found."
-#     assert len(dag.tasks) == 4, "DAG custom_task_group_example should contain 4 tasks."
-
-
-def test_timezone_aware_dag(dagbag):
-    dag = dagbag.get_dag("gcs_object_existence_sensor_test")
-    assert dag.timezone == Timezone("America/New_York"), (
-        "DAG timezone should be America/New_York."
-    )
-
-
-def test_bq_query_dag_test_date(dagbag):
-    dag = dagbag.get_dag("bq_query_dag_test_date")
-    assert dag is not None, "DAG bq_query_dag_test_date not found."
-    assert len(dag.tasks) == 1, "DAG bq_query_dag_test_date should contain 1 task."
-    assert not dag.catchup, "DAG bq_query_dag_test_date should have catchup=False."
-
-
-def test_airflow_db_export(dagbag):
-    dag = dagbag.get_dag("airflow_db_export")
-    assert dag is not None, "DAG airflow_db_export not found."
-    assert set(dag.tags) == {
-        "airflow_db",
-        "bigquery",
-        "export",
-        "upsert",
-        "snapshots",
-    }, "DAG airflow_db_export tags mismatch."
-    assert not dag.catchup, "DAG airflow_db_export should have catchup=False."
-
-
-def test_gcs_file_preprocessing(dagbag):
-    dag = dagbag.get_dag("gcs_file_preprocessing")
+def test_gcs_file_disk_preprocessing(dagbag):
+    dag = dagbag.get_dag("gcs_file_disk_preprocessing")
     assert dag is not None, "DAG gcs_file_preprocessing not found."
     assert len(dag.tasks) == 1, "DAG gcs_file_preprocessing should contain 1 task."
     assert not dag.catchup, "DAG gcs_file_preprocessing should have catchup=False."
+
+
+def test_sleepy_dynamic_task_mapping_structure(dagbag):
+    dag = dagbag.get_dag("sleepy_dynamic_task_mapping")
+    assert dag is not None
+    # get_sleepy_minutes and the expanded task group
+    # Note: in TaskFlow, the number of tasks might be different depending on how they are counted
+    assert len(dag.tasks) >= 2
+
+
+def test_sleepy_kubernetes_pod_operator_structure(dagbag):
+    dag = dagbag.get_dag("sleepy_kubernetes_pod_operator")
+    assert dag is not None
+    assert len(dag.tasks) == 1
+    assert dag.tasks[0].task_id == "sleep"
+
+
+def test_sleepy_task_group_structure(dagbag):
+    dag = dagbag.get_dag("sleepy_task_group")
+    assert dag is not None
+    assert len(dag.tasks) >= 3
 
 
 def test_dagbag_parse_times(dagbag):
@@ -123,28 +104,10 @@ def test_dagbag_parse_times(dagbag):
 
 # List of DAG IDs inferred from directory listing
 DAG_IDS = [
-    "airflow_db_export",
-    "bq_query_dag_test_date",
-    "circular_conf_achilles_heel",
-    "composer_dag_sensor_bad_example",
-    "composer_dag_sensor_example_dynamic",
-    "custom_cloud_composer_dag_run_sensor",
-    "custom_cloud_composer_trigger_dag_run_operator_example",
-    "custom_composer_external_task_sensor_example",
-    "custom_external_task_sensor_example",
-    "custom_parallel_task_group_1k",
-    "custom_parallel_task_group_example",
-    "custom_sequential_task_group_example",
-    "custom_sleepy_task_group_example",
-    "dag_triggerer",
-    "dynamic_task_group_nos",
-    "dynamic_task_group_tpt",
-    "dynamic_task_tpt",
     "gcs_file_disk_preprocessing",
-    "gcs_file_preprocessing",
-    "gcs_object_existence_sensor_test",
-    "sleepy",
-    "sleepy_pod",
+    "sleepy_dynamic_task_mapping",
+    "sleepy_kubernetes_pod_operator",
+    "sleepy_task_group",
 ]
 
 
