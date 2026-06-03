@@ -71,7 +71,7 @@ steps:
       airflow dags list
 
       # Run pytest to execute the tests in the workspace
-      python3 -m pytest -vv -s /workspace/composer/tests
+      python3 -m pytest -vv -s /workspace/cicd/tests
 options:
   machineType: 'E2_HIGHCPU_32'
   logging: CLOUD_LOGGING_ONLY

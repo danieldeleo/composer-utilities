@@ -89,7 +89,7 @@ done
 echo "Webserver is up!"
 
 # Run pytest to execute the tests in the workspace
-python3 -m pytest -vv -s /workspace/composer/tests
+python3 -m pytest -vv -s /workspace/cicd/tests
 ```
 
 ### 4. Fix DAGs and Tests
