@@ -22,12 +22,13 @@ from kubernetes.client import models as k8s
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
+    catchup=False,
     max_active_tasks=100,
     default_args={
         "retries": 10,
-        "retry_delay": datetime.timedelta(seconds=10),
+        "retry_delay": pendulum.duration(seconds=10),
     },
 )
 def sleepy_dynamic_task_mapping():
