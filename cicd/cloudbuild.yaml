@@ -48,7 +48,6 @@ steps:
             env_name=$(basename "$env_path")
 
             gcloud storage rsync --recursive --delete-unmatched-destination-objects cicd/dags gs://${bucket}/dags
-            gcloud storage rsync --recursive --delete-unmatched-destination-objects cicd/data gs://${bucket}/data
 
             # Update PyPI packages, suppressing "No change in configuration" errors
             update_output=$(gcloud composer environments update "$env_name" \
