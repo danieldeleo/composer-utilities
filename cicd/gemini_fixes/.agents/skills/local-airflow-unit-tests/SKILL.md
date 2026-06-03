@@ -16,11 +16,11 @@ This skill describes how to run Cloud Composer images locally using `docker` to 
 
 ### 1. Get the Composer Tagged Image
 
-Use the provided script to get the fully qualified Docker image tag for the desired Composer version. This script reads from `cicd/gemini_based_cicd/composer_version.txt`.
+Use the provided script to get the fully qualified Docker image tag for the desired Composer version. This script reads from `cicd/composer_version.txt`.
 
 ```bash
 # From the repository root
-IMAGE_TAG=$(python3 cicd/gemini_based_cicd/get_composer_tagged_image.py)
+IMAGE_TAG=$(python3 cicd/get_composer_tagged_image.py)
 echo $IMAGE_TAG
 ```
 
@@ -35,7 +35,7 @@ You can run the container interactively:
 
 ```bash
 # Get the image tag
-IMAGE_TAG=$(python3 cicd/gemini_based_cicd/get_composer_tagged_image.py)
+IMAGE_TAG=$(python3 cicd/get_composer_tagged_image.py)
 
 # Run the container
 docker run -it \
@@ -55,7 +55,7 @@ Make sure that all the test results are printed out to Cloud Build via standard 
 export PYTHONUSERBASE=/home/airflow/.local
 export PATH=$PYTHONUSERBASE/bin:$PATH
 export AIRFLOW_HOME=/home/airflow/airflow
-export AIRFLOW__CORE__DAGS_FOLDER=/workspace/cicd/gemini_based_cicd/dags
+export AIRFLOW__CORE__DAGS_FOLDER=/workspace/cicd/dags
 export AIRFLOW__CORE__LOAD_EXAMPLES=False
 
 # (REQUIRED) Generate constraints file from pre-installed packages in the image

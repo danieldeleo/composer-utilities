@@ -27,11 +27,11 @@ steps:
         PREV_COMMIT=$(git rev-parse --short HEAD^ 2>/dev/null || echo "none")
         echo "Comparing commit $$CURR_COMMIT with parent $$PREV_COMMIT"
         
-        if git diff --name-only HEAD^ HEAD 2>/dev/null | grep -q "cicd/gemini_based_cicd/Dockerfile.gemini"; then
-          echo "-> cicd/gemini_based_cicd/Dockerfile.gemini was modified. Setting BUILD_GEMINI=true"
+        if git diff --name-only HEAD^ HEAD 2>/dev/null | grep -q "cicd/gemini_fixes/Dockerfile.gemini"; then
+          echo "-> cicd/gemini_fixes/Dockerfile.gemini was modified. Setting BUILD_GEMINI=true"
           echo "true" > /workspace/BUILD_GEMINI
         elif git diff --name-only HEAD^ HEAD >/dev/null 2>&1; then
-          echo "-> cicd/gemini_based_cicd/Dockerfile.gemini was not modified. Setting BUILD_GEMINI=false"
+          echo "-> cicd/gemini_fixes/Dockerfile.gemini was not modified. Setting BUILD_GEMINI=false"
           echo "false" > /workspace/BUILD_GEMINI
         else
           echo "-> Warning: git diff failed. Defaulting to BUILD_GEMINI=true to be safe."
@@ -71,7 +71,7 @@ steps:
             echo "-> Reason: no cached image available (HAD_IMAGE=false)"
           fi
           echo "Building Gemini CLI image..."
-          docker build -t gemini-cli-with-docker -f cicd/gemini_based_cicd/Dockerfile.gemini .
+          docker build -t gemini-cli-with-docker -f cicd/gemini_fixes/Dockerfile.gemini .
           if [ -n "$$REGISTRY" ]; then
             echo "Pushing new image back to cache..."
             docker tag gemini-cli-with-docker "$$REGISTRY"
@@ -93,11 +93,11 @@ steps:
         set -eo pipefail
         
         # Symlink the .agents directory to the project root so gemini can discover the skills
-        ln -sf cicd/gemini_based_cicd/.agents .agents
+        ln -sf cicd/gemini_fixes/.agents .agents
 
         gemini --yolo --prompt "/skills list"
         gemini --yolo --prompt "Optimize the Airflow DAGs and run local tests"
-        # gemini --yolo --prompt "Run local tests using the cicd/gemini_based_cicd/.agents/skills/local-airflow-unit-tests/SKILL.md skill"
+        # gemini --yolo --prompt "Run local tests using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill"
     env:
       - 'GOOGLE_GENAI_USE_VERTEXAI=true'
       - 'GOOGLE_CLOUD_PROJECT=${_MODEL_PROJECT_ID}'

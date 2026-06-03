@@ -1,0 +1,76 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+steps:
+  - id : 'Check for linting errors'
+    name: 'ghcr.io/astral-sh/ruff'
+    args:
+      - check
+  - id : 'Check for formatting errors'
+    name: 'ghcr.io/astral-sh/ruff'
+    args:
+      - format
+      - --check
+  - id : 'Submit child Cloud Build job to unit test DAGs on specific Composer image version'
+    name: gcr.io/cloud-builders/gcloud
+    script: |
+      #!/usr/bin/env bash
+      
+      # Enable exit-on-error mode
+      set -eo pipefail
+      
+      # Get Composer tagged image using the helper script
+      COMPOSER_TAGGED_IMAGE=$(python3 /workspace/cicd/get_composer_tagged_image.py)
+      
+      # Replace COMPOSER_TAGGED_IMAGE variable in test_dags.yaml
+      sed -i -e "s|REPLACE_WITH_COMPOSER_TAGGED_IMAGE|$COMPOSER_TAGGED_IMAGE|g" /workspace/cicd/test_dags.yaml
+      
+      # Submit a new build using gcloud builds submit and poll
+      gcloud builds submit --config /workspace/cicd/test_dags.yaml --region=$LOCATION --polling-interval=10 /workspace
+      
+      # Copy DAGs, data, and requirements to all Composer environments only if unit tests pass
+      for location in us-east4 us-central1; do
+        # Get the environment name and storage bucket for all Composer environments in the specified location.
+        gcloud composer environments list --locations=$location --format="value(name, storageConfig.bucket)" | while read -r env_path bucket; do
+          if [[ -n "$env_path" && -n "$bucket" ]]; then
+            env_name=$(basename "$env_path")
+
+            gcloud storage rsync --recursive --delete-unmatched-destination-objects composer/dags gs://${bucket}/dags
+            gcloud storage rsync --recursive --delete-unmatched-destination-objects composer/data gs://${bucket}/data
+
+            # Update PyPI packages, suppressing "No change in configuration" errors
+            update_output=$(gcloud composer environments update "$env_name" \
+              --location "$location" \
+              --update-pypi-packages-from-file composer/requirements.txt 2>&1) && update_exit_code=0 || update_exit_code=$?
+            
+            if [ $update_exit_code -ne 0 ]; then
+              if echo "$update_output" | grep -q "No change in configuration"; then
+                echo "Composer environment $env_name is already up to date."
+              else
+                echo "$update_output"
+                exit $update_exit_code
+              fi
+            else
+              echo "$update_output"
+            fi
+          fi
+        done
+      done
+    env:
+      - LOCATION=$LOCATION
+options:
+  logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _IMAGE_CACHE_REGISTRY: '' # Optional: Set to cache image across builds (e.g. us-central1-docker.pkg.dev/...)
+
+timeout: 14400s # 4 hours
