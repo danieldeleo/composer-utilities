@@ -16,11 +16,13 @@ steps:
     name: 'ghcr.io/astral-sh/ruff'
     args:
       - check
+      - cicd
   - id : 'Check for formatting errors'
     name: 'ghcr.io/astral-sh/ruff'
     args:
       - format
       - --check
+      - cicd
   - id : 'Submit child Cloud Build job to unit test DAGs on specific Composer image version'
     name: gcr.io/cloud-builders/gcloud
     script: |
@@ -45,13 +47,13 @@ steps:
           if [[ -n "$env_path" && -n "$bucket" ]]; then
             env_name=$(basename "$env_path")
 
-            gcloud storage rsync --recursive --delete-unmatched-destination-objects composer/dags gs://${bucket}/dags
-            gcloud storage rsync --recursive --delete-unmatched-destination-objects composer/data gs://${bucket}/data
+            gcloud storage rsync --recursive --delete-unmatched-destination-objects cicd/dags gs://${bucket}/dags
+            gcloud storage rsync --recursive --delete-unmatched-destination-objects cicd/data gs://${bucket}/data
 
             # Update PyPI packages, suppressing "No change in configuration" errors
             update_output=$(gcloud composer environments update "$env_name" \
               --location "$location" \
-              --update-pypi-packages-from-file composer/requirements.txt 2>&1) && update_exit_code=0 || update_exit_code=$?
+              --update-pypi-packages-from-file cicd/dags/requirements.txt 2>&1) && update_exit_code=0 || update_exit_code=$?
             
             if [ $update_exit_code -ne 0 ]; then
               if echo "$update_output" | grep -q "No change in configuration"; then
