@@ -21,11 +21,11 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     default_args={
-        "retries": 10,
-        "retry_delay": datetime.timedelta(seconds=10),
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
     },
 )
 def sleepy_kubernetes_pod_operator():
