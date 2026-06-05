@@ -55,7 +55,7 @@ steps:
               --update-pypi-packages-from-file cicd/dags/requirements.txt 2>&1) && update_exit_code=0 || update_exit_code=$?
             
             if [ $update_exit_code -ne 0 ]; then
-              if echo "$update_output" | grep -q "No change in configuration"; then
+              if echo "$update_output" | grep -E -q "No change in configuration|does not result in any change to the environment.*configuration"; then
                 echo "Composer environment $env_name is already up to date."
               else
                 echo "$update_output"
