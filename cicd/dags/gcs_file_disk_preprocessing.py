@@ -62,7 +62,7 @@ def gcs_file_disk_preprocessing():
 
     volume = k8s.V1Volume(
         name="ephemeral-volume",
-        empty_dir=k8s.V1EmptyDirVolumeSource(size_limit="1Ti"),
+        empty_dir=k8s.V1EmptyDirVolumeSource(size_limit="500Gi"),
     )
 
     volume_mount = k8s.V1VolumeMount(
@@ -70,6 +70,15 @@ def gcs_file_disk_preprocessing():
         mount_path="/mnt/ephemeral_volume",
         sub_path=None,
         read_only=False,
+    )
+
+    resources = k8s.V1ResourceRequirements(
+        requests={
+            "ephemeral-storage": "1Ti",
+        },
+        limits={
+            "ephemeral-storage": "1Ti",
+        },
     )
 
     KubernetesPodOperator(
@@ -83,6 +92,7 @@ def gcs_file_disk_preprocessing():
         kubernetes_conn_id="kubernetes_default",
         log_events_on_failure=True,
         do_xcom_push=False,
+        container_resources=resources,
         volumes=[volume],
         volume_mounts=[volume_mount],
     )
