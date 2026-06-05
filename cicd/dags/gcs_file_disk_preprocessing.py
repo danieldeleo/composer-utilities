@@ -60,6 +60,9 @@ def gcs_file_disk_preprocessing():
     echo "Disk processing complete. Job finished."
     """
 
+    # Persistent Volume Claim must be used to get storage sizes > 10Gi on GKE
+    # Otherwise emptyDir is limited to 10Gi
+    # https://docs.cloud.google.com/kubernetes-engine/docs/how-to/generic-ephemeral-volumes#storage-types
     volume = k8s.V1Volume(
         name="ephemeral-volume",
         ephemeral=k8s.V1EphemeralVolumeSource(
