@@ -13,6 +13,7 @@
 # limitations under the License.
 from copy import deepcopy
 
+import datetime
 import pendulum
 from airflow.decorators import dag, task, task_group
 from airflow.models.param import Param
@@ -23,6 +24,7 @@ class CustomSleepyTaskGroup(TaskGroup):
     def __init__(self, group_id, seconds=0, **kwargs):
         super().__init__(group_id=group_id, **kwargs)
 
+        # Best Practice: TaskFlow API Adoption (@task) for cleaner data passing.
         @task(task_group=self)
         def sleep_for(seconds):
             from time import sleep
@@ -51,6 +53,11 @@ class CustomSleepyTaskGroup(TaskGroup):
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    # Best Practice: Ensure every DAG has a comprehensive default_args definition
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     params={
         "seconds_to_sleep": Param(
             10,
