@@ -18,14 +18,16 @@ import datetime
 import pendulum
 from airflow.decorators import dag
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from kubernetes.client import models as k8s
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
+    catchup=False,
     default_args={
         "retries": 10,
-        "retry_delay": datetime.timedelta(seconds=10),
+        "retry_delay": datetime.timedelta(minutes=5),
     },
 )
 def sleepy_kubernetes_pod_operator():
@@ -48,6 +50,16 @@ def sleepy_kubernetes_pod_operator():
         config_file="/home/airflow/composer_kube_config",
         # Identifier of connection that should be used
         kubernetes_conn_id="kubernetes_default",
+        container_resources=k8s.V1ResourceRequirements(
+            requests={
+                "cpu": "100m",
+                "memory": "64Mi",
+            },
+            limits={
+                "cpu": "100m",
+                "memory": "64Mi",
+            },
+        ),
     )
 
 

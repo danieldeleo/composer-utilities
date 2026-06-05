@@ -61,6 +61,8 @@ def test_gcs_file_disk_preprocessing(dagbag):
     assert dag is not None, "DAG gcs_file_preprocessing not found."
     assert len(dag.tasks) == 1, "DAG gcs_file_preprocessing should contain 1 task."
     assert not dag.catchup, "DAG gcs_file_preprocessing should have catchup=False."
+    assert dag.default_args["retries"] == 3
+    assert dag.schedule_interval == None
 
 
 def test_sleepy_dynamic_task_mapping_structure(dagbag):
@@ -69,6 +71,9 @@ def test_sleepy_dynamic_task_mapping_structure(dagbag):
     # get_sleepy_minutes and the expanded task group
     # Note: in TaskFlow, the number of tasks might be different depending on how they are counted
     assert len(dag.tasks) >= 2
+    assert not dag.catchup
+    assert dag.default_args["retries"] == 10
+    assert dag.schedule_interval == None
 
 
 def test_sleepy_kubernetes_pod_operator_structure(dagbag):
@@ -76,12 +81,18 @@ def test_sleepy_kubernetes_pod_operator_structure(dagbag):
     assert dag is not None
     assert len(dag.tasks) == 1
     assert dag.tasks[0].task_id == "sleep"
+    assert not dag.catchup
+    assert dag.default_args["retries"] == 10
+    assert dag.schedule_interval == None
 
 
 def test_sleepy_task_group_structure(dagbag):
     dag = dagbag.get_dag("sleepy_task_group")
     assert dag is not None
     assert len(dag.tasks) >= 3
+    assert not dag.catchup
+    assert dag.default_args["retries"] == 3
+    assert dag.schedule_interval == None
 
 
 def test_dagbag_parse_times(dagbag):

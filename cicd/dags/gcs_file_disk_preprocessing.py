@@ -34,6 +34,10 @@ OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
     start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
     tags=["gcs", "kubernetes", "example"],
+    default_args={
+        "retries": 3,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     params={
         "gcs_bucket": Param(GCS_BUCKET, type="string", title="GCS Bucket"),
         "input_object": Param(INPUT_OBJECT, type="string", title="Input Object"),
@@ -86,13 +90,23 @@ def gcs_file_disk_preprocessing():
         task_id="process_gcs_file",
         name="gcs-file-disk-processor-pod",
         namespace="composer-user-workloads",
-        image="gcr.io/google.com/cloudsdktool/cloud-sdk:latest",
+        image="gcr.io/google.com/cloudsdktool/google-cloud-cli:latest",
         cmds=["bash"],
         arguments=["-c", bash_script],
         config_file="/home/airflow/composer_kube_config",
         kubernetes_conn_id="kubernetes_default",
         log_events_on_failure=True,
         do_xcom_push=False,
+        container_resources=k8s.V1ResourceRequirements(
+            requests={
+                "cpu": "500m",
+                "memory": "512Mi",
+            },
+            limits={
+                "cpu": "1000m",
+                "memory": "1Gi",
+            },
+        ),
         volumes=[volume],
         volume_mounts=[volume_mount],
     )
