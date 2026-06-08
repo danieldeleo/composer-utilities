@@ -64,7 +64,7 @@ def gcs_file_disk_preprocessing_ma3():
     echo "Disk processing complete. Job finished."
     """
 
-    pvc_name = "gcs-file-disk-processor-pvc-{{ run_id | ts_nodash | lower }}"
+    pvc_name = "gcs-file-disk-processor-pvc-{{ ts_nodash | lower }}"
 
     pvc_manifest = {
         "apiVersion": "v1",
