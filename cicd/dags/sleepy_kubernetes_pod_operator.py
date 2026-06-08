@@ -21,7 +21,8 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 
 
 @dag(
-    schedule_interval=None,
+    # schedule=None is preferred over schedule_interval=None in Airflow 2.4+
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     default_args={
         "retries": 10,

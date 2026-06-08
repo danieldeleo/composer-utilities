@@ -22,7 +22,8 @@ from kubernetes.client import models as k8s
 
 
 @dag(
-    schedule_interval=None,
+    # schedule=None is preferred over schedule_interval=None in Airflow 2.4+
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     max_active_tasks=100,
     default_args={
