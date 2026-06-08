@@ -71,7 +71,7 @@ def gcs_file_disk_preprocessing():
                     access_modes=["ReadWriteOnce"],
                     storage_class_name="standard-rwo",
                     resources=k8s.V1VolumeResourceRequirements(
-                        requests={"storage": "500Gi"}
+                        requests={"storage": "1Ti"}
                     ),
                 )
             )
