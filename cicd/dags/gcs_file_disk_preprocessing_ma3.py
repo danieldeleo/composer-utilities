@@ -59,7 +59,7 @@ def gcs_file_disk_preprocessing_ma3():
     echo "Disk processing complete. Job finished."
     """
 
-    process_gcs_file = KubernetesPodOperator(
+    KubernetesPodOperator(
         task_id="process_gcs_file",
         name="gcs-file-disk-processor-pod",
         namespace="composer-user-workloads",
