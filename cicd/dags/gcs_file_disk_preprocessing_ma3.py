@@ -38,6 +38,10 @@ OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
         "input_object": Param(INPUT_OBJECT, type="string", title="Input Object"),
         "output_object": Param(OUTPUT_OBJECT, type="string", title="Output Object"),
     },
+    default_args={
+        "retries": 3,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
 )
 def gcs_file_disk_preprocessing_ma3():
     """

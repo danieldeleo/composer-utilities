@@ -65,6 +65,10 @@ class CustomSleepyTaskGroup(TaskGroup):
             description="The number of tasks that will sleep.",
         ),
     },
+    default_args={
+        "retries": 3,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     # max_active_tasks=500,
 )
 def sleepy_task_group():
