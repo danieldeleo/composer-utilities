@@ -16,14 +16,9 @@ An example DAG that uses KubernetesPodOperator to process a file from GCS in Man
 """
 
 import pendulum
-import yaml
 from airflow.decorators import dag
 from airflow.models.param import Param
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
-from airflow.providers.cncf.kubernetes.operators.resource import (
-    KubernetesCreateResourceOperator,
-    KubernetesDeleteResourceOperator,
-)
 from kubernetes.client import models as k8s
 
 # Define default parameters for the DAG
@@ -59,47 +54,10 @@ def gcs_file_disk_preprocessing_ma3():
     set -eo pipefail
     INPUT_GCS_BUCKET="{{ params.gcs_bucket }}"
 
-    gcloud storage rsync "gs://${INPUT_GCS_BUCKET}/" /mnt/ephemeral_volume/
+    gcloud storage rsync "gs://${INPUT_GCS_BUCKET}/" /tmp/
 
     echo "Disk processing complete. Job finished."
     """
-
-    pvc_name = "gcs-file-disk-processor-pvc-{{ ts_nodash | lower }}"
-
-    pvc_manifest = {
-        "apiVersion": "v1",
-        "kind": "PersistentVolumeClaim",
-        "metadata": {
-            "name": pvc_name,
-            "namespace": "composer-user-workloads",
-        },
-        "spec": {
-            "accessModes": ["ReadWriteOnce"],
-            "storageClassName": "standard-rwo",
-            "resources": {"requests": {"storage": "1Ti"}},
-        },
-    }
-
-    create_pvc = KubernetesCreateResourceOperator(
-        task_id="create_pvc",
-        yaml_conf=yaml.dump(pvc_manifest),
-        config_file="/home/airflow/composer_kube_config",
-        kubernetes_conn_id="kubernetes_default",
-    )
-
-    volume = k8s.V1Volume(
-        name="ephemeral-volume",
-        persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
-            claim_name=pvc_name
-        ),
-    )
-
-    volume_mount = k8s.V1VolumeMount(
-        name="ephemeral-volume",
-        mount_path="/mnt/ephemeral_volume",
-        sub_path=None,
-        read_only=False,
-    )
 
     process_gcs_file = KubernetesPodOperator(
         task_id="process_gcs_file",
@@ -112,19 +70,11 @@ def gcs_file_disk_preprocessing_ma3():
         kubernetes_conn_id="kubernetes_default",
         log_events_on_failure=True,
         do_xcom_push=False,
-        volumes=[volume],
-        volume_mounts=[volume_mount],
+        container_resources=k8s.V1ResourceRequirements(
+            requests={"ephemeral-storage": "100G"},
+            limits={"ephemeral-storage": "100G"},
+        ),
     )
-
-    delete_pvc = KubernetesDeleteResourceOperator(
-        task_id="delete_pvc",
-        yaml_conf=yaml.dump(pvc_manifest),
-        config_file="/home/airflow/composer_kube_config",
-        kubernetes_conn_id="kubernetes_default",
-        trigger_rule="all_done",
-    )
-
-    create_pvc >> process_gcs_file >> delete_pvc
 
 
 # Instantiate the DAG
