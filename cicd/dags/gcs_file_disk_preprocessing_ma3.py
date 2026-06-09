@@ -71,8 +71,8 @@ def gcs_file_disk_preprocessing_ma3():
         log_events_on_failure=True,
         do_xcom_push=False,
         container_resources=k8s.V1ResourceRequirements(
-            requests={"ephemeral-storage": "1TiB"},
-            limits={"ephemeral-storage": "1TiB"},
+            requests={"ephemeral-storage": "1000G"},
+            limits={"ephemeral-storage": "1000G"},
         ),
     )
 
