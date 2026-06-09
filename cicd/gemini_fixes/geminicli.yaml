@@ -102,7 +102,7 @@ steps:
       - 'GOOGLE_GENAI_USE_VERTEXAI=true'
       - 'GOOGLE_CLOUD_PROJECT=${_MODEL_PROJECT_ID}'
       - 'GOOGLE_CLOUD_LOCATION=${_MODEL_LOCATION}'
-      - 'MODEL_ID=${_MODEL_ID}'
+      - 'GEMINI_MODEL=${_MODEL_ID}'
       - 'GEMINI_CLI_TRUST_WORKSPACE=true'
   - id: 'Commit and push changes'
     name: 'gemini-cli-with-docker'
@@ -141,7 +141,7 @@ steps:
 substitutions:
   _IMAGE_CACHE_REGISTRY: 'us-docker.pkg.dev/${PROJECT_ID}/custom-gemini-cli-builds/gemini-cli-with-docker:latest'
   # _MODEL_ID: 'gemini-3-flash-preview'
-  _MODEL_ID: 'gemini-3.5-flash'
+  _MODEL_ID: 'gemini-3.1-pro-preview'
   _MODEL_PROJECT_ID: ${PROJECT_ID}
   _MODEL_LOCATION: 'global'
 
