@@ -13,6 +13,7 @@
 # limitations under the License.
 from copy import deepcopy
 
+import datetime
 import pendulum
 from airflow.decorators import dag, task, task_group
 from airflow.models.param import Param
@@ -51,6 +52,10 @@ class CustomSleepyTaskGroup(TaskGroup):
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     params={
         "seconds_to_sleep": Param(
             10,
