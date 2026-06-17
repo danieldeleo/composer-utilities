@@ -1,0 +1,1 @@
+apache-airflow-providers-google>=19.0.0
