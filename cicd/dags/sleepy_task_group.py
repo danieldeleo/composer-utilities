@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import datetime
 from copy import deepcopy
 
 import pendulum
@@ -51,6 +52,12 @@ class CustomSleepyTaskGroup(TaskGroup):
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    # BEST PRACTICE (Rule 6): Ensure every DAG has a comprehensive default_args definition
+    # that sets standard retries and retry_delay to handle transient failures gracefully.
+    default_args={
+        "retries": 2,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     params={
         "seconds_to_sleep": Param(
             10,

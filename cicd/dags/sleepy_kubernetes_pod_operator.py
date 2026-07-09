@@ -21,7 +21,9 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
+    # BEST PRACTICE (Rule 4): Avoid using catchup=True unless specifically requested.
+    catchup=False,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     default_args={
         "retries": 10,

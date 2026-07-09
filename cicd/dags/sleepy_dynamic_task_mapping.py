@@ -22,7 +22,9 @@ from kubernetes.client import models as k8s
 
 
 @dag(
-    schedule_interval=None,
+    schedule=None,
+    # BEST PRACTICE (Rule 4): Avoid using catchup=True unless specifically requested.
+    catchup=False,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     max_active_tasks=100,
     default_args={
