@@ -128,7 +128,7 @@ steps:
           
           echo "Generating PR description with Gemini CLI..."
           git diff HEAD~1..HEAD > /tmp/pr_diff.txt
-          gemini --yolo --prompt "Generate a detailed pull request description for these changes in markdown format. Focus on what changed and why. Do not include any conversational filler, just the markdown description." --files /tmp/pr_diff.txt > /tmp/pr_body.md
+          gemini --yolo --prompt "Generate a detailed pull request description for these changes in markdown format: @/tmp/pr_diff.txt. Focus on what changed and why. Do not include any conversational filler, just the markdown description." > /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
