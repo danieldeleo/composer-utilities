@@ -102,6 +102,75 @@ def test_dagbag_parse_times(dagbag):
     assert not failing_dags, "\n".join(failing_dags)
 
 
+def test_dag_tags_example(dagbag):
+    """Example of testing that a specific DAG has the expected tags."""
+    dag = dagbag.get_dag("gcs_file_disk_preprocessing")
+    assert dag is not None, "DAG gcs_file_disk_preprocessing not found."
+    assert "gcs" in dag.tags
+    assert "kubernetes" in dag.tags
+
+
+def test_dag_default_args_example(dagbag):
+    """Example of testing that a DAG has specific default_args configured."""
+    dag = dagbag.get_dag("sleepy_kubernetes_pod_operator")
+    assert dag is not None, "DAG sleepy_kubernetes_pod_operator not found."
+    assert "retries" in dag.default_args
+    assert dag.default_args["retries"] >= 3
+
+
+def test_task_properties_example(dagbag):
+    """Example of testing specific properties of a task."""
+    dag = dagbag.get_dag("sleepy_kubernetes_pod_operator")
+    assert dag is not None, "DAG sleepy_kubernetes_pod_operator not found."
+    
+    # Retrieve the specific task
+    task = dag.get_task("sleep")
+    
+    # Check properties
+    assert task.image == "gcr.io/google.com/cloudsdktool/google-cloud-cli:latest"
+    assert task.namespace == "composer-user-workloads"
+
+
+def test_kubernetes_pod_operator_namespace(dagbag):
+    """Tests that any KubernetesPodOperator uses the 'composer-user-workloads' namespace."""
+    from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+    
+    invalid_tasks = []
+    for dag_id, dag in dagbag.dags.items():
+        for task in dag.tasks:
+            if isinstance(task, KubernetesPodOperator):
+                if getattr(task, "namespace", None) != "composer-user-workloads":
+                    invalid_tasks.append(
+                        f"DAG: {dag_id}, Task: {task.task_id}, Namespace: {getattr(task, 'namespace', None)}"
+                    )
+                    
+    assert not invalid_tasks, (
+        "The following KubernetesPodOperator tasks do not use the 'composer-user-workloads' namespace:\n" + 
+        "\n".join(invalid_tasks)
+    )
+
+
+def test_dag_params_example(dagbag):
+    """Example of testing that a DAG has expected parameters defined."""
+    dag = dagbag.get_dag("gcs_file_disk_preprocessing")
+    assert dag is not None, "DAG gcs_file_disk_preprocessing not found."
+    
+    assert "gcs_bucket" in dag.params
+    assert "input_object" in dag.params
+    assert "output_object" in dag.params
+
+
+def test_dag_cycle_example(dagbag):
+    """Example of explicitly testing a DAG for cycles (circular dependencies)."""
+    from airflow.utils.dag_cycle_tester import check_cycle
+    
+    dag = dagbag.get_dag("sleepy_kubernetes_pod_operator")
+    assert dag is not None, "DAG sleepy_kubernetes_pod_operator not found."
+    
+    # Will raise AirflowDagCycleException if a cycle is found
+    check_cycle(dag)
+
+
 # List of DAG IDs inferred from directory listing
 DAG_IDS = [
     "gcs_file_disk_preprocessing",
