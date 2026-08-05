@@ -12,11 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from copy import deepcopy
+from datetime import timedelta
 
 import pendulum
 from airflow.decorators import dag, task, task_group
 from airflow.models.param import Param
 from airflow.utils.task_group import TaskGroup
+
+# Added default_args with retries to ensure tasks can handle transient failures gracefully
+DEFAULT_ARGS = {
+    "retries": 2,
+    "retry_delay": timedelta(minutes=5),
+}
 
 
 class CustomSleepyTaskGroup(TaskGroup):
@@ -51,6 +58,7 @@ class CustomSleepyTaskGroup(TaskGroup):
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    default_args=DEFAULT_ARGS,
     params={
         "seconds_to_sleep": Param(
             10,
