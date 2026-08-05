@@ -17,6 +17,7 @@ import time
 
 import airflow
 import requests
+from typing import Optional
 
 """ Integration testing using Airflow REST API
 
@@ -42,10 +43,10 @@ if AIRFLOW_VERSION.startswith("3"):
     )
     try:
         if os.path.exists(PASSWORD_FILE):
-            with open(PASSWORD_FILE, "r") as f:
+            with open(PASSWORD_FILE) as f:
                 passwords = json.load(f)
                 admin_password = passwords.get("admin", admin_password)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: Could not read password file {PASSWORD_FILE}: {e}")
 
     # Get JWT Token for Airflow 3
@@ -56,7 +57,7 @@ if AIRFLOW_VERSION.startswith("3"):
         )
         try:
             res_json = token_res.json()
-        except Exception:
+        except Exception:  # noqa: BLE001
             res_json = {}
 
         if token_res.status_code in [200, 201] or "access_token" in res_json:
@@ -69,7 +70,7 @@ if AIRFLOW_VERSION.startswith("3"):
             print(
                 f"Warning: Failed to get token (Status: {token_res.status_code}): {token_res.text}. Falling back to no auth headers."
             )
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: Error getting token: {e}")
 
 else:
@@ -78,9 +79,9 @@ else:
     PASSWORD_FILE = os.path.join(AIRFLOW_HOME, "standalone_admin_password.txt")
     try:
         if os.path.exists(PASSWORD_FILE):
-            with open(PASSWORD_FILE, "r") as f:
+            with open(PASSWORD_FILE) as f:
                 admin_password = f.read().strip()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: Could not read password file {PASSWORD_FILE}: {e}")
 
     AUTH = ("admin", admin_password)
@@ -104,7 +105,7 @@ def unpause_all_dags():
             )
         else:
             print("Successfully unpaused all DAGs.")
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Warning: Error unpausing all DAGs: {e}")
 
 
@@ -112,7 +113,7 @@ def unpause_all_dags():
 unpause_all_dags()
 
 
-def trigger_and_wait_for_dag(dag_id: str, conf: dict = None):
+def trigger_and_wait_for_dag(dag_id: str, conf: Optional[dict] = None):
     # Wait for DAG to be available in REST API
     status_url = f"{AF_URL}/dags/{dag_id}"
     max_retries = 60  # 120 seconds total with 2s sleep
@@ -129,7 +130,7 @@ def trigger_and_wait_for_dag(dag_id: str, conf: dict = None):
             if res.status_code == 200:
                 print(f"DAG {dag_id} is available.")
                 break
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"Warning: Error checking DAG availability: {e}")
 
         time.sleep(2)
@@ -178,7 +179,7 @@ def trigger_and_wait_for_dag(dag_id: str, conf: dict = None):
                 print(
                     f"\nFailed to fetch import errors (Status: {errors_res.status_code})"
                 )
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             print(f"\nError fetching import errors: {e}")
 
     assert response.status_code == 200, f"Failed to trigger {dag_id}: {response.text}"

@@ -138,11 +138,13 @@ def test_kubernetes_pod_operator_namespace(dagbag):
     invalid_tasks = []
     for dag_id, dag in dagbag.dags.items():
         for task in dag.tasks:
-            if isinstance(task, KubernetesPodOperator):
-                if getattr(task, "namespace", None) != "composer-user-workloads":
-                    invalid_tasks.append(
-                        f"DAG: {dag_id}, Task: {task.task_id}, Namespace: {getattr(task, 'namespace', None)}"
-                    )
+            if (
+                isinstance(task, KubernetesPodOperator)
+                and getattr(task, "namespace", None) != "composer-user-workloads"
+            ):
+                invalid_tasks.append(
+                    f"DAG: {dag_id}, Task: {task.task_id}, Namespace: {getattr(task, 'namespace', None)}"
+                )
 
     assert not invalid_tasks, (
         "The following KubernetesPodOperator tasks do not use the 'composer-user-workloads' namespace:\n"

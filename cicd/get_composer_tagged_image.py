@@ -15,7 +15,6 @@
 import os
 import re
 import sys
-from typing import Tuple
 
 DOCKER_REGISTRY_IMAGE_TAG = (
     "us-docker.pkg.dev/cloud-airflow-releaser/"
@@ -27,7 +26,7 @@ IMAGE_VERSION_PATTERN = r"composer-([1-9]+(?:\.[0-9]+\.[0-9]+)?)-airflow-([1-9]+
 
 
 # https://github.com/GoogleCloudPlatform/composer-local-dev/blob/2f18605627a2b92de145bfc8a7e44e19ab08a97b/composer_local_dev/utils.py#L185
-def get_airflow_composer_versions(image_version: str) -> Tuple[str, str]:
+def get_airflow_composer_versions(image_version: str) -> tuple[str, str]:
     """
     Get airflow and composer versions from image_version.
 
@@ -40,7 +39,7 @@ def get_airflow_composer_versions(image_version: str) -> Tuple[str, str]:
     """
     version_match = re.match(IMAGE_VERSION_PATTERN, image_version)
     if not version_match:
-        raise Exception("No image version found")
+        raise ValueError("No image version found")  # noqa: TRY003
     composer_v, airflow_v = version_match.group(1), version_match.group(2)
     return airflow_v, composer_v
 
@@ -91,7 +90,6 @@ if __name__ == "__main__":
         )
         with open(
             os.path.join(workspace_path, "cicd/composer_version.txt"),
-            "r",
         ) as f:
             for line in f:
                 if line.strip() and not line.startswith("#"):
@@ -99,6 +97,6 @@ if __name__ == "__main__":
                     break
         tag = get_docker_image_tag_from_image_version(image_version)
         print(tag)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
