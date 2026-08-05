@@ -14,7 +14,6 @@
 import json
 import os
 import time
-from typing import Optional
 
 import airflow
 import requests
@@ -113,7 +112,7 @@ def unpause_all_dags():
 unpause_all_dags()
 
 
-def trigger_and_wait_for_dag(dag_id: str, conf: Optional[dict] = None):
+def trigger_and_wait_for_dag(dag_id: str, conf: dict | None = None):
     # Wait for DAG to be available in REST API
     status_url = f"{AF_URL}/dags/{dag_id}"
     max_retries = 60  # 120 seconds total with 2s sleep
