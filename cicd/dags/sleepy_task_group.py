@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import datetime
 from copy import deepcopy
 
 import pendulum
@@ -64,6 +65,10 @@ class CustomSleepyTaskGroup(TaskGroup):
             title="Number of Tasks to Sleep",
             description="The number of tasks that will sleep.",
         ),
+    },
+    default_args={
+        "retries": 2,
+        "retry_delay": datetime.timedelta(minutes=5),
     },
     # max_active_tasks=500,
 )
