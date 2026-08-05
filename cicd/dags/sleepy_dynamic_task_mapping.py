@@ -24,6 +24,7 @@ from kubernetes.client import models as k8s
 @dag(
     schedule_interval=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
+    catchup=False,
     max_active_tasks=100,
     default_args={
         "retries": 10,

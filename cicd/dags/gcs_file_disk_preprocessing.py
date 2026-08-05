@@ -33,6 +33,10 @@ OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
     schedule=None,
     start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     tags=["gcs", "kubernetes", "example"],
     params={
         "gcs_bucket": Param(GCS_BUCKET, type="string", title="GCS Bucket"),

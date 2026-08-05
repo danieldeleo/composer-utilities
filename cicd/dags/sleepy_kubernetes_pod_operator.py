@@ -23,6 +23,7 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 @dag(
     schedule_interval=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
+    catchup=False,
     default_args={
         "retries": 10,
         "retry_delay": datetime.timedelta(seconds=10),
