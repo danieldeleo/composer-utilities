@@ -93,7 +93,10 @@ if __name__ == "__main__":
             os.path.join(workspace_path, "cicd/composer_version.txt"),
             "r",
         ) as f:
-            image_version = f.read().strip()
+            for line in f:
+                if line.strip() and not line.startswith("#"):
+                    image_version = line.strip()
+                    break
         tag = get_docker_image_tag_from_image_version(image_version)
         print(tag)
     except Exception as e:
