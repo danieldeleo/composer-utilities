@@ -15,6 +15,7 @@
 An example DAG that uses KubernetesPodOperator to process a file from GCS in Managed Airflow (Composer) v3.
 """
 
+import datetime
 import pendulum
 from airflow.decorators import dag
 from airflow.models.param import Param
@@ -27,11 +28,16 @@ GCS_BUCKET = "your-gcs-bucket-name"  # <--- CHANGE THIS
 INPUT_OBJECT = "path/to/your/input_file.txt"  # <--- CHANGE THIS
 OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
 
+DEFAULT_ARGS = {
+    "retries": 3,
+    "retry_delay": datetime.timedelta(minutes=5),
+}
 
 @dag(
     schedule=None,
     start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
+    default_args=DEFAULT_ARGS,
     tags=["gcs", "kubernetes", "example"],
     params={
         "gcs_bucket": Param(GCS_BUCKET, type="string", title="GCS Bucket"),
