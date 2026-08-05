@@ -39,7 +39,7 @@ def get_airflow_composer_versions(image_version: str) -> tuple[str, str]:
     """
     version_match = re.match(IMAGE_VERSION_PATTERN, image_version)
     if not version_match:
-        raise ValueError("No image version found")  # noqa: TRY003
+        raise ValueError("No image version found")
     composer_v, airflow_v = version_match.group(1), version_match.group(2)
     return airflow_v, composer_v
 

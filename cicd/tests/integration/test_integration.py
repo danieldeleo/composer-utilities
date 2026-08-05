@@ -14,10 +14,10 @@
 import json
 import os
 import time
+from typing import Optional
 
 import airflow
 import requests
-from typing import Optional
 
 """ Integration testing using Airflow REST API
 
