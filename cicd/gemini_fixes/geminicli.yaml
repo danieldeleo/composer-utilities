@@ -104,7 +104,7 @@ steps:
       - 'AGY_ADC_AUTH=true'
 
 substitutions:
-  _AGY_FLAGS: '--model="Gemini 3.1 Pro (Low)" --add-dir /workspace --dangerously-skip-permissions'
+  _AGY_FLAGS: '--model="Gemini 3.1 Pro (Low)" --add-dir /workspace --dangerously-skip-permissions --print-timeout=2h'
 
 options:
   logging: CLOUD_LOGGING_ONLY
