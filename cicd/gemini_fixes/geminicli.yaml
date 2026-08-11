@@ -23,6 +23,9 @@ steps:
         # Enable exit-on-error mode
         set -eo pipefail
         
+        # Ensure we are in the correct workspace directory (Cloud Build root)
+        cd /workspace
+        
         # Install dependencies
         apt-get update && apt-get install -y curl ca-certificates git docker.io ripgrep
         
@@ -35,15 +38,11 @@ steps:
         # Symlink the .agents directory to the project root so agy can discover the skills
         ln -sf cicd/gemini_fixes/.agents .agents
 
-        agy --print "/skills list" --dangerously-skip-permissions || true
-        agy --print "Optimize the Airflow DAGs and run local tests" --dangerously-skip-permissions
-        # agy --print "Run local tests using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill" --dangerously-skip-permissions
+        # Run agy commands
+        agy ${_AGY_FLAGS} --print "Optimize the Airflow DAGs and run local tests" --dangerously-skip-permissions
+        # agy ${_AGY_FLAGS} --print "Run local tests using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill" --dangerously-skip-permissions
     env:
       - 'AGY_ADC_AUTH=true'
-      - 'GOOGLE_GENAI_USE_VERTEXAI=true'
-      - 'GOOGLE_CLOUD_PROJECT=${_MODEL_PROJECT_ID}'
-      - 'GOOGLE_CLOUD_LOCATION=${_MODEL_LOCATION}'
-      - 'GEMINI_MODEL=${_MODEL_ID}'
       
   - id: 'Commit and push changes'
     name: 'ubuntu'
@@ -56,6 +55,9 @@ steps:
         
         # Enable exit-on-error mode
         set -eo pipefail
+
+        # Ensure we are in the correct workspace directory (Cloud Build root)
+        cd /workspace
 
         # Install dependencies
         apt-get update && apt-get install -y curl ca-certificates git
@@ -72,6 +74,9 @@ steps:
         # Add agy to PATH and execute it
         export PATH="$$HOME/.local/bin:$$PATH"
         
+        # Remove the temporary .agents symlink so it doesn't trigger git status
+        rm -f .agents
+        
         if [[ -n $$(git status -s) ]]; then
           echo "Changes detected. Creating a feature branch..."
           git config --global user.email "${SERVICE_ACCOUNT_EMAIL}"
@@ -83,13 +88,13 @@ steps:
           AGY_FIX_BRANCH_NAME="agy-fix-${BUILD_ID}"
           git checkout -b "$$AGY_FIX_BRANCH_NAME"
           
-          git add --update
+          git add -A
           git commit -m "Automated updates from Antigravity CLI"
           git push origin "$$AGY_FIX_BRANCH_NAME"
           
           echo "Generating PR description with Antigravity CLI..."
           git diff HEAD~1..HEAD > /tmp/pr_diff.txt
-          agy --print "Generate a detailed pull request description for these changes in markdown format: @/tmp/pr_diff.txt. Focus on what changed and why. Do not include any conversational filler, just the markdown description." --dangerously-skip-permissions > /tmp/pr_body.md
+          agy ${_AGY_FLAGS} --print "Generate a detailed pull request description for these changes in markdown format: @/tmp/pr_diff.txt. Focus on what changed and why. Do not include any conversational filler, just the markdown description." --dangerously-skip-permissions > /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
@@ -103,16 +108,9 @@ steps:
     env:
       - BRANCH_NAME=${BRANCH_NAME}
       - 'AGY_ADC_AUTH=true'
-      - 'GOOGLE_GENAI_USE_VERTEXAI=true'
-      - 'GOOGLE_CLOUD_PROJECT=${_MODEL_PROJECT_ID}'
-      - 'GOOGLE_CLOUD_LOCATION=${_MODEL_LOCATION}'
-      - 'GEMINI_MODEL=${_MODEL_ID}'
 
 substitutions:
-  # _MODEL_ID: 'gemini-3-flash-preview'
-  _MODEL_ID: 'gemini-3.1-pro-preview'
-  _MODEL_PROJECT_ID: ${PROJECT_ID}
-  _MODEL_LOCATION: 'global'
+  _AGY_FLAGS: '--model=pro'
 
 options:
   logging: CLOUD_LOGGING_ONLY
