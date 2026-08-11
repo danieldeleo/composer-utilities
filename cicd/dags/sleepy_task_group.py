@@ -51,6 +51,12 @@ class CustomSleepyTaskGroup(TaskGroup):
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    # Added default_args with retries and retry_delay as per best practices
+    # to ensure tasks gracefully handle transient failures.
+    default_args={
+        "retries": 3,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     params={
         "seconds_to_sleep": Param(
             10,
