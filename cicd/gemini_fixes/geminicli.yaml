@@ -23,9 +23,6 @@ steps:
         # Enable exit-on-error mode
         set -eo pipefail
         
-        # Ensure we are in the correct workspace directory (Cloud Build root)
-        cd /workspace
-        
         # Install dependencies
         apt-get update && apt-get install -y curl ca-certificates git docker.io ripgrep
         
@@ -39,8 +36,8 @@ steps:
         ln -sf cicd/gemini_fixes/.agents .agents
 
         # Run agy commands
-        agy ${_AGY_FLAGS} --print "Optimize the Airflow DAGs and run local tests" --dangerously-skip-permissions
-        # agy ${_AGY_FLAGS} --print "Run local tests using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill" --dangerously-skip-permissions
+        agy ${_AGY_FLAGS} --print "Optimize the Airflow DAGs in /workspace and run local tests" --dangerously-skip-permissions
+        # agy ${_AGY_FLAGS} --print "Run local tests in /workspace using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill" --dangerously-skip-permissions
     env:
       - 'AGY_ADC_AUTH=true'
       
@@ -55,9 +52,6 @@ steps:
         
         # Enable exit-on-error mode
         set -eo pipefail
-
-        # Ensure we are in the correct workspace directory (Cloud Build root)
-        cd /workspace
 
         # Install dependencies
         apt-get update && apt-get install -y curl ca-certificates git
@@ -110,7 +104,7 @@ steps:
       - 'AGY_ADC_AUTH=true'
 
 substitutions:
-  _AGY_FLAGS: '--model=pro'
+  _AGY_FLAGS: '--model="Gemini 3.1 Pro (Low)"'
 
 options:
   logging: CLOUD_LOGGING_ONLY
