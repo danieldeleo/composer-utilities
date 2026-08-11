@@ -17,6 +17,7 @@ import pendulum
 from airflow.decorators import dag, task, task_group
 from airflow.models.param import Param
 from airflow.utils.task_group import TaskGroup
+from datetime import timedelta
 
 
 class CustomSleepyTaskGroup(TaskGroup):
@@ -51,6 +52,10 @@ class CustomSleepyTaskGroup(TaskGroup):
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": timedelta(minutes=5),
+    },
     params={
         "seconds_to_sleep": Param(
             10,

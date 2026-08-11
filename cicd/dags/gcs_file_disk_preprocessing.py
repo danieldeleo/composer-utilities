@@ -20,6 +20,7 @@ from airflow.decorators import dag
 from airflow.models.param import Param
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from kubernetes.client import models as k8s
+from datetime import timedelta
 
 # Define default parameters for the DAG
 # These can be overridden at trigger time by changing the value in the Airflow UI when triggering the DAG.
@@ -34,6 +35,10 @@ OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
     start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
     tags=["gcs", "kubernetes", "example"],
+    default_args={
+        "retries": 3,
+        "retry_delay": timedelta(minutes=5),
+    },
     params={
         "gcs_bucket": Param(GCS_BUCKET, type="string", title="GCS Bucket"),
         "input_object": Param(INPUT_OBJECT, type="string", title="Input Object"),
