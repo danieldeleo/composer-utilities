@@ -20,11 +20,10 @@ cicd/
 │   │   └── test_unit.py             # Pytest suite validating DAG imports, start dates, and structures
 │   └── integration/
 │       └── test_integration.py      # Integration testing via local standalone Airflow REST API calls
-└── gemini_fixes/                    # Gemini CLI automated code analysis & optimization configuration
-    ├── Dockerfile.gemini            # Container environment with Node.js, Docker, and Gemini CLI installed
-    ├── geminicli.yaml               # Cloud Build pipeline that uses Gemini CLI to optimize code and create PRs
+└── gemini_fixes/                    # Antigravity CLI automated code analysis & optimization configuration
+    ├── antigravitycli.yaml          # Cloud Build pipeline that uses Antigravity CLI to optimize code and create PRs
     └── .agents/
-        └── skills/                  # Custom Gemini CLI skills (Airflow best practices and unit testing)
+        └── skills/                  # Custom Antigravity CLI skills (Airflow best practices and unit testing)
 ```
 
 ---
@@ -88,17 +87,17 @@ A Python script that reads `composer_version.txt`, parses the Composer/Airflow v
 
 ---
 
-## 5. Gemini CLI Optimization Workflow (`gemini_fixes/`)
+## 5. Antigravity CLI Optimization Workflow (`gemini_fixes/`)
 
-This submodule automates code analysis, applies Airflow best practices, and proposes changes via Pull Requests using the Gemini API.
+This submodule automates code analysis, applies Airflow best practices, and proposes changes via Pull Requests using the Antigravity CLI.
 
-### Workflow Configuration (`geminicli.yaml`)
-1. **Dockerfile Check**: Checks if `Dockerfile.gemini` has changes compared to the parent commit.
-2. **Build/Pull CLI Image**: Builds a container using `Dockerfile.gemini` (incorporating Node.js, Git, GitHub CLI, and the Gemini CLI npm package) or retrieves a cached version.
+### Workflow Configuration (`antigravitycli.yaml`)
+1. **Environment Setup**: Installs system dependencies and the GitHub CLI (`gh`).
+2. **Install CLI**: Downloads and installs the Antigravity CLI via its installation script.
 3. **AI Code Optimization**:
    - Mounts the local `.agents/skills/` directory.
-   - Prompts Gemini to analyze files and optimize DAGs according to target guidelines.
-4. **Automated PR**: Checks for changes. If modifications exist, it commits them to a new branch (`gemini-fix-<build-id>`), pushes to GitHub, and uses the GitHub CLI (`gh`) to open a Pull Request against the base branch.
+   - Prompts Antigravity CLI to analyze files and optimize DAGs according to target guidelines.
+4. **Automated PR**: Checks for changes. If modifications exist, it commits them to a new branch (`agy-fix-<build-id>`), pushes to GitHub, and uses the GitHub CLI (`gh`) to open a Pull Request against the base branch.
 
 ### Target Best Practices (`.agents/skills/airflow-best-practices/SKILL.md`)
 The optimization tool validates and corrects DAG code against several Airflow best practices:
