@@ -36,8 +36,8 @@ steps:
         ln -sf cicd/gemini_fixes/.agents .agents
 
         # Run agy commands
-        agy ${_AGY_FLAGS} --print "Optimize the Airflow DAGs in /workspace and run local tests" --dangerously-skip-permissions
-        # agy ${_AGY_FLAGS} --print "Run local tests in /workspace using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill" --dangerously-skip-permissions
+        agy ${_AGY_FLAGS} --print "Optimize the Airflow DAGs and run local tests"
+        # agy ${_AGY_FLAGS} --print "Run local tests using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill"
     env:
       - 'AGY_ADC_AUTH=true'
       
@@ -88,7 +88,7 @@ steps:
           
           echo "Generating PR description with Antigravity CLI..."
           git diff HEAD~1..HEAD > /tmp/pr_diff.txt
-          agy ${_AGY_FLAGS} --print "Generate a detailed pull request description for these changes in markdown format: @/tmp/pr_diff.txt. Focus on what changed and why. Do not include any conversational filler, just the markdown description." --dangerously-skip-permissions > /tmp/pr_body.md
+          agy ${_AGY_FLAGS} --print "Generate a detailed pull request description for these changes in markdown format: @/tmp/pr_diff.txt. Focus on what changed and why. Do not include any conversational filler, just the markdown description." > /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
@@ -104,7 +104,7 @@ steps:
       - 'AGY_ADC_AUTH=true'
 
 substitutions:
-  _AGY_FLAGS: '--model="Gemini 3.1 Pro (Low)"'
+  _AGY_FLAGS: '--model="Gemini 3.1 Pro (Low)" --add-dir /workspace --dangerously-skip-permissions'
 
 options:
   logging: CLOUD_LOGGING_ONLY
