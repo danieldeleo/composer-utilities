@@ -12,77 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 steps:
-  - id: 'Check if Dockerfile.gemini modified'
-    name: 'gcr.io/cloud-builders/git'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        if [ -f .git/shallow ]; then
-          echo "Shallow clone detected. Fetching parent commit for branch $${BRANCH_NAME}..."
-          git fetch origin "$${BRANCH_NAME}" --depth=2 || echo "Fetch failed."
-        fi
-        
-        CURR_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-        PREV_COMMIT=$(git rev-parse --short HEAD^ 2>/dev/null || echo "none")
-        echo "Comparing commit $$CURR_COMMIT with parent $$PREV_COMMIT"
-        
-        if git diff --name-only HEAD^ HEAD 2>/dev/null | grep -q "cicd/gemini_fixes/Dockerfile.gemini"; then
-          echo "-> cicd/gemini_fixes/Dockerfile.gemini was modified. Setting BUILD_GEMINI=true"
-          echo "true" > /workspace/BUILD_GEMINI
-        elif git diff --name-only HEAD^ HEAD >/dev/null 2>&1; then
-          echo "-> cicd/gemini_fixes/Dockerfile.gemini was not modified. Setting BUILD_GEMINI=false"
-          echo "false" > /workspace/BUILD_GEMINI
-        else
-          echo "-> Warning: git diff failed. Defaulting to BUILD_GEMINI=true to be safe."
-          echo "true" > /workspace/BUILD_GEMINI
-        fi
-    env:
-      - BRANCH_NAME=${BRANCH_NAME}
-  - id: 'Build Gemini CLI with Docker'
-    name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        BUILD_REQUIRED=$(cat /workspace/BUILD_GEMINI || echo "true")
-        REGISTRY="${_IMAGE_CACHE_REGISTRY}"
-        
-        HAD_IMAGE=false
-        if [ -n "$$REGISTRY" ]; then
-          echo "Attempting to pull image from cache: $$REGISTRY"
-          docker pull "$$REGISTRY" || echo "Image not found in cache."
-          
-          if docker image inspect "$$REGISTRY" >/dev/null 2>&1; then
-            echo "Found image in cache."
-            docker tag "$$REGISTRY" gemini-cli-with-docker
-            HAD_IMAGE=true
-          fi
-        fi
-        
-        echo "Decision Factors:"
-        echo "-> BUILD_REQUIRED: $$BUILD_REQUIRED"
-        echo "-> HAD_IMAGE:      $$HAD_IMAGE"
-        
-        if [ "$$BUILD_REQUIRED" = "true" ] || [ "$$HAD_IMAGE" = "false" ]; then
-          if [ "$$BUILD_REQUIRED" = "true" ]; then
-            echo "-> Reason: build was forced (BUILD_REQUIRED=true)"
-          else
-            echo "-> Reason: no cached image available (HAD_IMAGE=false)"
-          fi
-          echo "Building Gemini CLI image..."
-          docker build -t gemini-cli-with-docker -f cicd/gemini_fixes/Dockerfile.gemini .
-          if [ -n "$$REGISTRY" ]; then
-            echo "Pushing new image back to cache..."
-            docker tag gemini-cli-with-docker "$$REGISTRY"
-            docker push "$$REGISTRY"
-          fi
-        else
-          echo "Skipping build. Using cached image."
-        fi
-        rm /workspace/BUILD_GEMINI
-  - id : 'Run Gemini CLI for local tests'
-    name: 'gemini-cli-with-docker'
+  - id : 'Run Antigravity CLI for local tests'
+    name: 'ubuntu'
     entrypoint: 'bash'
     args: 
       - '-c'
@@ -92,25 +23,55 @@ steps:
         # Enable exit-on-error mode
         set -eo pipefail
         
-        # Symlink the .agents directory to the project root so gemini can discover the skills
+        # Install dependencies
+        apt-get update && apt-get install -y curl ca-certificates git docker.io ripgrep
+        
+        # Download and install Antigravity CLI
+        curl -fsSL https://antigravity.google/cli/install.sh | bash
+        
+        # Add agy to PATH and execute it
+        export PATH="$$HOME/.local/bin:$$PATH"
+        
+        # Symlink the .agents directory to the project root so agy can discover the skills
         ln -sf cicd/gemini_fixes/.agents .agents
 
-        gemini --yolo --prompt "/skills list"
-        gemini --yolo --prompt "Optimize the Airflow DAGs and run local tests"
-        # gemini --yolo --prompt "Run local tests using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill"
+        agy --print "/skills list" --dangerously-skip-permissions || true
+        agy --print "Optimize the Airflow DAGs and run local tests" --dangerously-skip-permissions
+        # agy --print "Run local tests using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill" --dangerously-skip-permissions
     env:
+      - 'AGY_ADC_AUTH=true'
       - 'GOOGLE_GENAI_USE_VERTEXAI=true'
       - 'GOOGLE_CLOUD_PROJECT=${_MODEL_PROJECT_ID}'
       - 'GOOGLE_CLOUD_LOCATION=${_MODEL_LOCATION}'
       - 'GEMINI_MODEL=${_MODEL_ID}'
-      - 'GEMINI_CLI_TRUST_WORKSPACE=true'
+      
   - id: 'Commit and push changes'
-    name: 'gemini-cli-with-docker'
+    name: 'ubuntu'
     entrypoint: 'bash'
     secretEnv: ['GITHUB_TOKEN']
     args:
       - '-c'
       - |
+        #!/usr/bin/env bash
+        
+        # Enable exit-on-error mode
+        set -eo pipefail
+
+        # Install dependencies
+        apt-get update && apt-get install -y curl ca-certificates git
+        
+        # Install GitHub CLI (gh)
+        curl -sSLo /tmp/gh.tar.gz https://github.com/cli/cli/releases/download/v2.51.0/gh_2.51.0_linux_amd64.tar.gz
+        tar -xzf /tmp/gh.tar.gz -C /tmp
+        mv /tmp/gh_2.51.0_linux_amd64/bin/gh /usr/local/bin/
+        rm -rf /tmp/gh.tar.gz /tmp/gh_2.51.0_linux_amd64
+        
+        # Download and install Antigravity CLI
+        curl -fsSL https://antigravity.google/cli/install.sh | bash
+        
+        # Add agy to PATH and execute it
+        export PATH="$$HOME/.local/bin:$$PATH"
+        
         if [[ -n $$(git status -s) ]]; then
           echo "Changes detected. Creating a feature branch..."
           git config --global user.email "${SERVICE_ACCOUNT_EMAIL}"
@@ -119,36 +80,35 @@ steps:
           export GH_TOKEN=$$GITHUB_TOKEN
           gh auth setup-git
 
-          GEMINI_FIX_BRANCH_NAME="gemini-fix-${BUILD_ID}"
-          git checkout -b "$$GEMINI_FIX_BRANCH_NAME"
+          AGY_FIX_BRANCH_NAME="agy-fix-${BUILD_ID}"
+          git checkout -b "$$AGY_FIX_BRANCH_NAME"
           
           git add --update
-          git commit -m "Automated updates from Gemini CLI"
-          git push origin "$$GEMINI_FIX_BRANCH_NAME"
+          git commit -m "Automated updates from Antigravity CLI"
+          git push origin "$$AGY_FIX_BRANCH_NAME"
           
-          echo "Generating PR description with Gemini CLI..."
+          echo "Generating PR description with Antigravity CLI..."
           git diff HEAD~1..HEAD > /tmp/pr_diff.txt
-          gemini --yolo --prompt "Generate a detailed pull request description for these changes in markdown format: @/tmp/pr_diff.txt. Focus on what changed and why. Do not include any conversational filler, just the markdown description." > /tmp/pr_body.md
+          agy --print "Generate a detailed pull request description for these changes in markdown format: @/tmp/pr_diff.txt. Focus on what changed and why. Do not include any conversational filler, just the markdown description." --dangerously-skip-permissions > /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
-            --title "Automated updates from Gemini CLI" \
+            --title "Automated updates from Antigravity CLI" \
             --body-file /tmp/pr_body.md \
-            --head "$$GEMINI_FIX_BRANCH_NAME" \
+            --head "$$AGY_FIX_BRANCH_NAME" \
             --base "$$BRANCH_NAME"
         else
           echo "No changes detected."
         fi
     env:
       - BRANCH_NAME=${BRANCH_NAME}
+      - 'AGY_ADC_AUTH=true'
       - 'GOOGLE_GENAI_USE_VERTEXAI=true'
       - 'GOOGLE_CLOUD_PROJECT=${_MODEL_PROJECT_ID}'
       - 'GOOGLE_CLOUD_LOCATION=${_MODEL_LOCATION}'
       - 'GEMINI_MODEL=${_MODEL_ID}'
-      - 'GEMINI_CLI_TRUST_WORKSPACE=true'
 
 substitutions:
-  _IMAGE_CACHE_REGISTRY: 'us-docker.pkg.dev/${PROJECT_ID}/custom-gemini-cli-builds/gemini-cli-with-docker:latest'
   # _MODEL_ID: 'gemini-3-flash-preview'
   _MODEL_ID: 'gemini-3.1-pro-preview'
   _MODEL_PROJECT_ID: ${PROJECT_ID}
