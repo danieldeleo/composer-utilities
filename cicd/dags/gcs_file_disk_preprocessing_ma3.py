@@ -71,8 +71,11 @@ def gcs_file_disk_preprocessing_ma3():
         log_events_on_failure=True,
         do_xcom_push=False,
         container_resources=k8s.V1ResourceRequirements(
-            requests={"ephemeral-storage": "1000G"},
-            limits={"ephemeral-storage": "1000G"},
+            # KubernetesPodOperator running in Managed Airflow 3
+            # currently supports 100GB of local disk for the pod,
+            # but upcoming changes will increase that limit.
+            requests={"ephemeral-storage": "100G"},
+            limits={"ephemeral-storage": "100G"},
         ),
     )
 
