@@ -51,11 +51,17 @@ def gcs_file_disk_preprocessing():
 
     # The bash script to be executed in the pod.
     # It uses Jinja templating to access the DAG's parameters.
+    # Optimization: Use {{ ds }} for execution-specific locations to ensure idempotency.
     bash_script = """
     set -eo pipefail
     INPUT_GCS_BUCKET="{{ params.gcs_bucket }}"
+    INPUT_OBJECT="{{ params.input_object }}"
+    OUTPUT_OBJECT="{{ params.output_object }}"
 
-    gcloud storage rsync "gs://${INPUT_GCS_BUCKET}/" /mnt/ephemeral_volume/
+    gcloud storage cp "gs://${INPUT_GCS_BUCKET}/${INPUT_OBJECT}" /mnt/ephemeral_volume/
+    
+    # Write to execution-specific location using {{ ds }} to ensure idempotency
+    gcloud storage cp /mnt/ephemeral_volume/$(basename ${INPUT_OBJECT}) "gs://${INPUT_GCS_BUCKET}/${OUTPUT_OBJECT}/{{ ds }}/"
 
     echo "Disk processing complete. Job finished."
     """
