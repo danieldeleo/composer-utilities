@@ -98,7 +98,7 @@ def unpause_all_dags():
     try:
         print("Attempting to unpause all DAGs with pattern '%'...")
         res = requests.patch(url, json={"is_paused": False}, **kwargs)
-        if res.status_code != 200:
+        if res.status_code not in (200, 201):
             print(
                 f"Warning: Failed to unpause all DAGs with wildcard (Status: {res.status_code}): {res.text}"
             )
@@ -161,7 +161,7 @@ def trigger_and_wait_for_dag(dag_id: str, conf: dict | None = None):
 
     response = requests.post(trigger_url, **trigger_kwargs)
 
-    if response.status_code != 200:
+    if response.status_code not in (200, 201):
         # Check for import errors before failing
         import_errors_url = f"{AF_URL}/importErrors"
         try:
@@ -181,7 +181,7 @@ def trigger_and_wait_for_dag(dag_id: str, conf: dict | None = None):
         except Exception as e:  # noqa: BLE001
             print(f"\nError fetching import errors: {e}")
 
-    assert response.status_code == 200, f"Failed to trigger {dag_id}: {response.text}"
+    assert response.status_code in (200, 201), f"Failed to trigger {dag_id}: {response.text}"
 
     dag_run_id = response.json()["dag_run_id"]
 
