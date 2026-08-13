@@ -12,4 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-composer-3-airflow-2.11.1-build.0
+composer-3-airflow-3.2.2-build.2
