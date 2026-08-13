@@ -181,7 +181,9 @@ def trigger_and_wait_for_dag(dag_id: str, conf: dict | None = None):
         except Exception as e:  # noqa: BLE001
             print(f"\nError fetching import errors: {e}")
 
-    assert response.status_code in (200, 201), f"Failed to trigger {dag_id}: {response.text}"
+    assert response.status_code in (200, 201), (
+        f"Failed to trigger {dag_id}: {response.text}"
+    )
 
     dag_run_id = response.json()["dag_run_id"]
 
