@@ -15,6 +15,8 @@
 An example DAG that uses KubernetesPodOperator to process a file from GCS in Managed Airflow (Composer) v3.
 """
 
+import datetime
+
 import pendulum
 from airflow.decorators import dag
 from airflow.models.param import Param
@@ -37,6 +39,10 @@ OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
         "gcs_bucket": Param(GCS_BUCKET, type="string", title="GCS Bucket"),
         "input_object": Param(INPUT_OBJECT, type="string", title="Input Object"),
         "output_object": Param(OUTPUT_OBJECT, type="string", title="Output Object"),
+    },
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
     },
 )
 def gcs_file_disk_preprocessing_ma3():

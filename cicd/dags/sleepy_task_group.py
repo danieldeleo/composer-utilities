@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import datetime
 from copy import deepcopy
 
 import pendulum
@@ -65,6 +66,10 @@ class CustomSleepyTaskGroup(TaskGroup):
             description="The number of tasks that will sleep.",
         ),
     },
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     # max_active_tasks=500,
 )
 def sleepy_task_group():
@@ -95,7 +100,7 @@ def sleepy_task_group():
         # task is mapped via dynamic task mapping. Therefore we "ask"
         # for the values by forcing the lazy sequence into a list using
         # the list constructor.
-        seconds = list(seconds)
+        pass
         print(f"Done sleeping for {seconds=}")
 
     out = sleepy_task_group.expand(seconds=get_sleepy_seconds())
