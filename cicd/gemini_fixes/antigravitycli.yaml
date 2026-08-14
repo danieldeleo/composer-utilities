@@ -36,7 +36,7 @@ steps:
         ln -sf cicd/gemini_fixes/.agents .agents
 
         # Run agy commands
-        agy ${_AGY_FLAGS} --print "Optimize the Airflow DAGs and run local tests; once finished, remove any temporary files created during testing"
+        agy ${_AGY_FLAGS} --print "Optimize the Airflow DAGs and run local tests; once finished, remove any temporary files created during testing. Lastly, Run \`uvx ruff check --select I --fix && uvx ruff check --fix --unsafe-fixes && uvx ruff format\` to make sure the files are properly formatted"
         # agy ${_AGY_FLAGS} --print "Run local tests using the cicd/gemini_fixes/.agents/skills/local-airflow-unit-tests/SKILL.md skill"
     env:
       - 'AGY_ADC_AUTH=true'
