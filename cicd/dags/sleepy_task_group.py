@@ -53,7 +53,7 @@ class CustomSleepyTaskGroup(TaskGroup):
     catchup=False,
     params={
         "seconds_to_sleep": Param(
-            10,
+            1,
             type="integer",
             title="Seconds to Sleep",
             description="The number of seconds each task will sleep.",
