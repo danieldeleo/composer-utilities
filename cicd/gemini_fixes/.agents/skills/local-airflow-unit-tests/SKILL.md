@@ -62,7 +62,7 @@ export AIRFLOW__CORE__LOAD_EXAMPLES=False
 pip list --format=freeze > /tmp/constraints.txt
 
 # Install workspace dependencies using constraints to avoid conflicts
-pip install --user \
+pip install --user pytest \
   -r /workspace/composer/requirements.txt \
   -c /tmp/constraints.txt
 

@@ -39,7 +39,7 @@ steps:
       sed -i '/apache-airflow-providers-google/d' /tmp/constraints.txt
 
       # Install requested testing requirements using the captured constraints to avoid dependency conflicts
-      pip install --no-cache-dir --user \
+      pip install --no-cache-dir --user pytest \
         --requirement /workspace/dags/requirements.txt \
         --constraint /tmp/constraints.txt
 
