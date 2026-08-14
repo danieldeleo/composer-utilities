@@ -28,11 +28,20 @@ INPUT_OBJECT = "path/to/your/input_file.txt"  # <--- CHANGE THIS
 OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
 
 
+import datetime
+
+# Define default args for the DAG
+default_args = {
+    "retries": 2,
+    "retry_delay": datetime.timedelta(minutes=5),
+}
+
 @dag(
     schedule=None,
     start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
     tags=["gcs", "kubernetes", "example"],
+    default_args=default_args,
     params={
         "gcs_bucket": Param(GCS_BUCKET, type="string", title="GCS Bucket"),
         "input_object": Param(INPUT_OBJECT, type="string", title="Input Object"),

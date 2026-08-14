@@ -47,10 +47,18 @@ class CustomSleepyTaskGroup(TaskGroup):
         self.output = even_more_sleep_for(more_sleep_for(sleep_for(seconds)))
 
 
+import datetime
+
+default_args = {
+    "retries": 2,
+    "retry_delay": datetime.timedelta(minutes=5),
+}
+
 @dag(
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    default_args=default_args,
     params={
         "seconds_to_sleep": Param(
             10,
