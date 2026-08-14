@@ -106,3 +106,32 @@ The optimization tool validates and corrects DAG code against several Airflow be
 - **Idempotent Tasks**: Configures write operations to be idempotent (UPSERTs, partition overwrites, or execution-date parameterized paths).
 - **Lightweight XComs**: Flags heavy data transfers (like Pandas DataFrames) and replaces them with GCS/S3 storage paths.
 - **Proper Retries**: Ensures standard retry count and retry delays are configured in `default_args`.
+
+### Cleaning Up Stale Agent Branches
+
+If you experiment with Antigravity CLI and branch tests, you might accumulate several `agy-fix-*` branches. You can run this bash script to batch delete them from the remote repository:
+
+```bash
+#!/usr/bin/env bash
+
+# Fetch the latest remote branches and prune deleted ones
+git fetch -p
+
+# Find all remote branches starting with agy-fix-
+# awk extracts just the branch name after 'origin/'
+BRANCHES=$(git branch -r | awk -F'origin/' '/agy-fix-/{print $2}')
+
+if [ -z "$BRANCHES" ]; then
+  echo "No matching remote branches found. Nothing to clean up!"
+  exit 0
+fi
+
+echo "Found the following remote branches to delete:"
+echo "$BRANCHES"
+echo
+
+# Delete all of the branches at once
+echo "$BRANCHES" | xargs git push origin --delete
+
+echo "Cleanup complete!"
+```
