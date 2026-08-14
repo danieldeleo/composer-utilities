@@ -51,6 +51,10 @@ class CustomSleepyTaskGroup(TaskGroup):
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    default_args={
+        "retries": 2,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     params={
         "seconds_to_sleep": Param(
             10,
@@ -95,7 +99,6 @@ def sleepy_task_group():
         # task is mapped via dynamic task mapping. Therefore we "ask"
         # for the values by forcing the lazy sequence into a list using
         # the list constructor.
-        seconds = list(seconds)
         print(f"Done sleeping for {seconds=}")
 
     out = sleepy_task_group.expand(seconds=get_sleepy_seconds())
