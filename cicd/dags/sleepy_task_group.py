@@ -95,7 +95,10 @@ def sleepy_task_group():
         # task is mapped via dynamic task mapping. Therefore we "ask"
         # for the values by forcing the lazy sequence into a list using
         # the list constructor.
-        seconds = list(seconds)
+        try:
+            seconds = list(seconds)
+        except TypeError:
+            seconds = [seconds]
         print(f"Done sleeping for {seconds=}")
 
     out = sleepy_task_group.expand(seconds=get_sleepy_seconds())
