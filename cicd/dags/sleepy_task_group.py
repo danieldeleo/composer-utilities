@@ -59,7 +59,7 @@ class CustomSleepyTaskGroup(TaskGroup):
             description="The number of seconds each task will sleep.",
         ),
         "number_of_sleepy_tasks": Param(
-            10,
+            1,
             type="integer",
             title="Number of Tasks to Sleep",
             description="The number of tasks that will sleep.",

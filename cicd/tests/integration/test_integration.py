@@ -190,7 +190,7 @@ def trigger_and_wait_for_dag(dag_id: str, conf: dict | None = None):
     # 2. Poll for completion
     status_url = f"{AF_URL}/dags/{dag_id}/dagRuns/{dag_run_id}"
     state = "queued"
-    max_retries = 240  # Poll up to 8 minutes
+    max_retries = 450  # Poll up to 15 minutes
 
     while state in ["queued", "running"] and max_retries > 0:
         time.sleep(2)
