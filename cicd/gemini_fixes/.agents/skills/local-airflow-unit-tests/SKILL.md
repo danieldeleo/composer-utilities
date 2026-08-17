@@ -63,7 +63,7 @@ pip list --format=freeze > /tmp/constraints.txt
 
 # Install workspace dependencies using constraints to avoid conflicts
 pip install --user pytest \
-  -r /workspace/composer/requirements.txt \
+  -r /workspace/cicd/dags/requirements.txt \
   -c /tmp/constraints.txt
 
 # In Airflow 3, some internal components (like the Simple Auth Manager) may attempt to initialize 
