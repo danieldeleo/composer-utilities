@@ -38,26 +38,23 @@ def sleepy_dynamic_task_mapping():
 
     @task_group
     def sleep_for(minutes):
-        @task(multiple_outputs=True)
-        def create_kpo_args(minutes):
-            arguments = [
-                "-c",
-                rf"""
-                set -e && \
-                echo "Try number: $AIRFLOW_RETRY_NUMBER" && \
-                echo "Sleeping for {minutes} minutes" && \
-                sleep {minutes}m
-                """,
-            ]
-            return {"arguments": arguments}
-
-        kpo_args = create_kpo_args(minutes)
         KubernetesPodOperator(
             task_id="sleepy_pod",
             name="sleepy",
             cmds=["bash"],
-            arguments=kpo_args["arguments"],
-            env_vars={"AIRFLOW_RETRY_NUMBER": "{{ task_instance.try_number }}"},
+            arguments=[
+                "-c",
+                r"""
+                set -e && \
+                echo "Try number: $AIRFLOW_RETRY_NUMBER" && \
+                echo "Sleeping for $SLEEP_MINUTES minutes" && \
+                sleep ${SLEEP_MINUTES}m
+                """,
+            ],
+            env_vars={
+                "AIRFLOW_RETRY_NUMBER": "{{ task_instance.try_number }}",
+                "SLEEP_MINUTES": minutes,
+            },
             namespace="composer-user-workloads",
             image="gcr.io/google.com/cloudsdktool/google-cloud-cli:latest",
             config_file="/home/airflow/composer_kube_config",
