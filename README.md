@@ -17,4 +17,9 @@ Profiles DAG parsing for a Managed Airflow environment. This tool helps you opti
 ## [Managed Airflow Control Panel](./control_panel)
 An administration dashboard to manage DAGs (pause, unpause, trigger, and bulk operations), view import errors, and edit DAG code in-browser across multiple Composer environments, projects, and regions from a single workspace.
 
-
+## [Cloud Composer CI/CD Pipeline](./cicd)
+A template and sample configuration for establishing a CI/CD pipeline for Cloud Composer. It features:
+* **Linting & Formatting**: Checks using Ruff.
+* **Automated Testing**: Runs unit and integration tests against local Airflow instances inside a Composer-matching environment.
+* **Deployment**: Automatically syncs DAGs, data files, and dependencies (`requirements.txt`) to Cloud Composer environments upon successful validation.
+* **Agentic Remediation**: An optional setup using Antigravity CLI to automatically analyze, fix, and propose PRs for DAG failures or optimizations.
