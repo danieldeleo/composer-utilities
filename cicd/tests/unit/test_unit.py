@@ -25,7 +25,7 @@ PARSING_DURATION_THRESHOLD = 10.0
 def dagbag():
     dags_path = str((Path(__file__).parent.parent.parent / "dags").resolve())
     sys.path.insert(0, dags_path)
-    yield DagBag(dag_folder=dags_path, include_examples=False)
+    yield DagBag(dag_folder=dags_path)
 
 
 def test_dagbag_not_empty(dagbag):
