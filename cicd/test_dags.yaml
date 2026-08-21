@@ -32,10 +32,9 @@ steps:
 
       # Capture currently installed packages as constraints for the upcoming install
       pip list --format=freeze > /tmp/constraints.txt
-      
-      ########################################################################################
-      # REMOVE THE LINE BELOW ONCE COMPOSER SUPPORTS apache-airflow-providers-google>=19.1.0 #
-      ########################################################################################
+
+      # Remove the apache-airflow-providers-google constraint because cicd/dags/requirements.txt
+      # may specify a higher version when testing the DAGs (e.g. "==19.1.0").
       sed -i '/apache-airflow-providers-google/d' /tmp/constraints.txt
 
       # Install requested testing requirements using the captured constraints to avoid dependency conflicts
@@ -68,6 +67,7 @@ steps:
       done
       echo "Webserver is up!"
 
+      # List the DAGs to verify they are parsed without errors
       airflow dags list
 
       # Run pytest to execute the tests in the workspace
