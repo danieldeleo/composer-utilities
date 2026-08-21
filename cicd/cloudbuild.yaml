@@ -42,7 +42,7 @@ steps:
       
       # Copy DAGs, data, and requirements to all Composer environments only if unit tests pass
       pids=""
-      for location in us-east4 us-central1; do
+      for location in $MANAGED_AIRFLOW_LOCATIONS; do
         # Get the environment name and storage bucket for all Composer environments in the specified location.
         while read -r env_path bucket; do
           if [[ -n "$env_path" && -n "$bucket" ]]; then
@@ -65,6 +65,7 @@ steps:
                 echo "$update_output"
               fi
 
+              # Sync the DAGs directory to the Composer environment's GCS bucket
               gcloud storage rsync --recursive --delete-unmatched-destination-objects cicd/dags gs://${bucket}/dags
             ) &
             pids+=" $!"
@@ -73,6 +74,7 @@ steps:
       done
 
       # Wait for all background processes to complete and capture their exit codes
+      # We capture the PIDs of background subshells to wait on them concurrently
       FAIL=0
       for pid in $pids; do
         wait $pid || FAIL=1
@@ -84,9 +86,10 @@ steps:
       fi
     env:
       - LOCATION=$LOCATION
+      - MANAGED_AIRFLOW_LOCATIONS=$_MANAGED_AIRFLOW_LOCATIONS
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
-  _IMAGE_CACHE_REGISTRY: '' # Optional: Set to cache image across builds (e.g. us-central1-docker.pkg.dev/...)
+  _MANAGED_AIRFLOW_LOCATIONS: 'us-east4 us-central1'
 
 timeout: 14400s # 4 hours
