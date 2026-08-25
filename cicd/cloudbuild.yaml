@@ -14,11 +14,13 @@
 steps:
   - id : 'Check for linting errors'
     name: 'ghcr.io/astral-sh/ruff'
+    waitFor: ['-']
     args:
       - check
       - cicd
   - id : 'Check for formatting errors'
     name: 'ghcr.io/astral-sh/ruff'
+    waitFor: ['-']
     args:
       - format
       - --check
@@ -39,45 +41,65 @@ steps:
       
       # Submit a new build using gcloud builds submit and poll
       gcloud builds submit --config /workspace/cicd/test_dags.yaml --region=$LOCATION --polling-interval=10 /workspace/cicd
+    env:
+      - LOCATION=$LOCATION
+  - id : 'Copy DAGs, data, and requirements to all Composer environments'
+    name: gcr.io/cloud-builders/gcloud
+    script: |
+      #!/usr/bin/env bash
+      
+      # Enable exit-on-error mode
+      set -eo pipefail
       
       # Copy DAGs, data, and requirements to all Composer environments only if unit tests pass
       pids=""
       for location in $MANAGED_AIRFLOW_LOCATIONS; do
-        # Get the environment name and storage bucket for all Composer environments in the specified location.
-        while read -r env_path bucket; do
-          if [[ -n "$env_path" && -n "$bucket" ]]; then
-            (
-              env_name=$(basename "$env_path")
+        (
+          location_pids=""
+          # Get the environment name and storage bucket for all Composer environments in the specified location.
+          while read -r env_path bucket; do
+            if [[ -n "$env_path" && -n "$bucket" ]]; then
+              (
+                env_name=$(basename "$env_path")
 
-              # Update PyPI packages, suppressing "No change in configuration" errors
-              while true; do
-                update_output=$(gcloud composer environments update "$env_name" \
-                  --location "$location" \
-                  --update-pypi-packages-from-file cicd/dags/requirements.txt 2>&1) && update_exit_code=0 || update_exit_code=$?
-                
-                if [ $update_exit_code -ne 0 ]; then
-                  if echo "$update_output" | grep -E -q "No change in configuration|does not result in any change to the environment.*configuration"; then
-                    echo "Composer environment $env_name is already up to date."
-                    break
-                  elif echo "$update_output" | grep -q "Cannot update environment in state UPDATING"; then
-                    echo "Environment $env_name is currently UPDATING. Retrying in 60 seconds..."
-                    sleep 60
+                # Update PyPI packages, suppressing "No change in configuration" errors
+                while true; do
+                  update_output=$(gcloud composer environments update "$env_name" \
+                    --location "$location" \
+                    --update-pypi-packages-from-file cicd/dags/requirements.txt 2>&1) && update_exit_code=0 || update_exit_code=$?
+                  
+                  if [ $update_exit_code -ne 0 ]; then
+                    if echo "$update_output" | grep -E -q "No change in configuration|does not result in any change to the environment.*configuration"; then
+                      echo "Composer environment $env_name is already up to date."
+                      break
+                    elif echo "$update_output" | grep -q "Cannot update environment in state UPDATING"; then
+                      echo "Environment $env_name is currently UPDATING. Retrying in 60 seconds..."
+                      sleep 60
+                    else
+                      echo "$update_output"
+                      exit $update_exit_code
+                    fi
                   else
                     echo "$update_output"
-                    exit $update_exit_code
+                    break
                   fi
-                else
-                  echo "$update_output"
-                  break
-                fi
-              done
+                done
 
-              # Sync the DAGs directory to the Composer environment's GCS bucket
-              gcloud storage rsync --recursive --delete-unmatched-destination-objects cicd/dags gs://${bucket}/dags
-            ) &
-            pids+=" $!"
-          fi
-        done < <(gcloud composer environments list --locations=$location --format="value(name, storageConfig.bucket)")
+                # Sync the DAGs directory to the Composer environment's GCS bucket
+                gcloud storage rsync --recursive --delete-unmatched-destination-objects cicd/dags gs://${bucket}/dags
+              ) &
+              location_pids+=" $!"
+            fi
+          done < <(gcloud composer environments list --locations=$location --format="value(name, storageConfig.bucket)")
+          
+          # Wait for all background processes for this location to complete
+          FAIL_LOC=0
+          for pid in $location_pids; do
+            wait $pid || FAIL_LOC=1
+          done
+          exit $FAIL_LOC
+        ) &
+        pids+=" $!"
       done
 
       # Wait for all background processes to complete and capture their exit codes
@@ -92,7 +114,6 @@ steps:
         exit $FAIL
       fi
     env:
-      - LOCATION=$LOCATION
       - MANAGED_AIRFLOW_LOCATIONS=$_MANAGED_AIRFLOW_LOCATIONS
 options:
   logging: CLOUD_LOGGING_ONLY
