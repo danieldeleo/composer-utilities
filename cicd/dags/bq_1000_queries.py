@@ -1,17 +1,14 @@
 import datetime
 
 from airflow import DAG
+from airflow.decorators import task
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
-with DAG(
-    dag_id="bq_1000_queries",
-    schedule_interval=None,
-    start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
-    catchup=False,
-    tags=["bigquery", "load_test"],
-) as dag:
+
+@task
+def generate_query_configs():
     # Generate 1000 configurations for the BigQueryInsertJobOperator
-    query_configs = [
+    return [
         {
             "query": {
                 "query": "SELECT 1",
@@ -20,6 +17,16 @@ with DAG(
         }
         for _ in range(1000)
     ]
+
+
+with DAG(
+    dag_id="bq_1000_queries",
+    schedule_interval=None,
+    start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
+    catchup=False,
+    tags=["bigquery", "load_test"],
+) as dag:
+    query_configs = generate_query_configs()
 
     # Use dynamic task mapping to expand the operator into 1000 tasks
     bq_tasks = BigQueryInsertJobOperator.partial(
