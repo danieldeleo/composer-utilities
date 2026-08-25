@@ -574,7 +574,7 @@ async def proxy(api_version: str, path: str, request: Request):
 
     except httpx.RequestError as e:
         logging.error(f"Request Forwarding Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Proxy server error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Proxy server error: {e!s}")
 
 
 # Serve React App

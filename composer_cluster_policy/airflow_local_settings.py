@@ -34,10 +34,9 @@ Place this file as `airflow_local_settings.py` in your Cloud Composer environmen
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 import os
-import re
+from datetime import timedelta
 from typing import Any
 
 # Configure logger
@@ -85,7 +84,7 @@ MAX_ALLOWED_RETRIES: int = int(os.environ.get("COMPOSER_POLICY_MAX_RETRIES", "3"
 # RESOURCE PARSING HELPERS
 # ==============================================================================
 
-def parse_cpu_to_cores(cpu_val: str | int | float | None) -> float | None:
+def parse_cpu_to_cores(cpu_val: str | float | None) -> float | None:
     """Parses a Kubernetes CPU quantity string into a float representing cores.
 
     Examples:
@@ -110,7 +109,7 @@ def parse_cpu_to_cores(cpu_val: str | int | float | None) -> float | None:
         return None
 
 
-def parse_memory_to_mib(mem_val: str | int | float | None) -> float | None:
+def parse_memory_to_mib(mem_val: str | float | None) -> float | None:
     """Parses a Kubernetes Memory quantity string into MiB (mebibytes).
 
     Examples:
