@@ -37,7 +37,8 @@ def sleepy_kubernetes_pod_operator():
             "-c",
             r"""
             set -e && \
-            echo "Try number: $AIRFLOW_RETRY_NUMBER" && \
+            echo "gcloud authenticated as: $(gcloud auth list)" && \
+            echo "try_number is: $AIRFLOW_RETRY_NUMBER" && \
             echo "Sleeping for 5 minutes" && \
             sleep 5m
             """,
