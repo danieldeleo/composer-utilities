@@ -50,20 +50,27 @@ steps:
               env_name=$(basename "$env_path")
 
               # Update PyPI packages, suppressing "No change in configuration" errors
-              update_output=$(gcloud composer environments update "$env_name" \
-                --location "$location" \
-                --update-pypi-packages-from-file cicd/dags/requirements.txt 2>&1) && update_exit_code=0 || update_exit_code=$?
-              
-              if [ $update_exit_code -ne 0 ]; then
-                if echo "$update_output" | grep -E -q "No change in configuration|does not result in any change to the environment.*configuration"; then
-                  echo "Composer environment $env_name is already up to date."
+              while true; do
+                update_output=$(gcloud composer environments update "$env_name" \
+                  --location "$location" \
+                  --update-pypi-packages-from-file cicd/dags/requirements.txt 2>&1) && update_exit_code=0 || update_exit_code=$?
+                
+                if [ $update_exit_code -ne 0 ]; then
+                  if echo "$update_output" | grep -E -q "No change in configuration|does not result in any change to the environment.*configuration"; then
+                    echo "Composer environment $env_name is already up to date."
+                    break
+                  elif echo "$update_output" | grep -q "Cannot update environment in state UPDATING"; then
+                    echo "Environment $env_name is currently UPDATING. Retrying in 60 seconds..."
+                    sleep 60
+                  else
+                    echo "$update_output"
+                    exit $update_exit_code
+                  fi
                 else
                   echo "$update_output"
-                  exit $update_exit_code
+                  break
                 fi
-              else
-                echo "$update_output"
-              fi
+              done
 
               # Sync the DAGs directory to the Composer environment's GCS bucket
               gcloud storage rsync --recursive --delete-unmatched-destination-objects cicd/dags gs://${bucket}/dags
