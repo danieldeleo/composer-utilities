@@ -6,7 +6,7 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobO
 with DAG(
     dag_id="bq_1000_queries",
     schedule_interval=None,
-    start_date=datetime.datetime(2024, 1, 1),
+    start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
     tags=["bigquery", "load_test"],
 ) as dag:
