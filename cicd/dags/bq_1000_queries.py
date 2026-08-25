@@ -10,7 +10,6 @@ with DAG(
     catchup=False,
     tags=["bigquery", "load_test"],
 ) as dag:
-
     # Generate 1000 configurations for the BigQueryInsertJobOperator
     query_configs = [
         {

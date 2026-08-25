@@ -10,7 +10,6 @@ with DAG(
     catchup=False,
     tags=["bigquery", "load_test", "antipattern"],
 ) as dag:
-
     # Antipattern: Using a Python loop to statically generate 1000 separate tasks
     # This bloats the DAG definition size and makes the Airflow UI very slow to load
     for i in range(1000):
@@ -21,5 +20,5 @@ with DAG(
                     "query": "SELECT 1",
                     "useLegacySql": False,
                 }
-            }
+            },
         )
