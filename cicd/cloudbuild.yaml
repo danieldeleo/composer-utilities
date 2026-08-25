@@ -40,10 +40,10 @@ steps:
       sed -i -e "s|REPLACE_WITH_COMPOSER_TAGGED_IMAGE|$COMPOSER_TAGGED_IMAGE|g" /workspace/cicd/test_dags.yaml
       
       # Submit a new build using gcloud builds submit and poll
-      gcloud builds submit --config /workspace/cicd/test_dags.yaml --region=$LOCATION --polling-interval=10 --service-account=$SERVICE_ACCOUNT_EMAIL /workspace/cicd
+      gcloud builds submit --config /workspace/cicd/test_dags.yaml --region=$LOCATION --polling-interval=10 --service-account=$SERVICE_ACCOUNT /workspace/cicd
     env:
       - LOCATION=$LOCATION
-      - SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL
+      - SERVICE_ACCOUNT=$SERVICE_ACCOUNT
   - id : 'Copy DAGs, data, and requirements to all Composer environments'
     name: gcr.io/cloud-builders/gcloud
     script: |
