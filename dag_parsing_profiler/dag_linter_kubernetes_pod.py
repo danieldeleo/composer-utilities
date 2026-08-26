@@ -27,16 +27,15 @@ from __future__ import annotations
 
 import json
 import os
-import pendulum
-import requests
 
 import google.auth
-from google.auth.transport.requests import Request
-
+import pendulum
+import requests
+from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.operators.python import PythonOperator
-from airflow.exceptions import AirflowSkipException
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from google.auth.transport.requests import Request
 from kubernetes.client import models as k8s
 
 # ==============================================================================
@@ -173,11 +172,11 @@ def _verify_docker_image_v2(image_uri: str) -> bool:
         )
 
         if response.status_code == 200:
-            print(f"   ✅ Manifest found (HTTP 200). Valid Custom Image.")
+            print("   ✅ Manifest found (HTTP 200). Valid Custom Image.")
             return True
 
         if response.status_code == 404:
-            print(f"   ℹ️  Manifest not found (HTTP 404). Confirmed Vanilla Environment.")
+            print("   ℹ️  Manifest not found (HTTP 404). Confirmed Vanilla Environment.")
             return False
 
         print(f"   ⚠️  Access Forbidden (HTTP {response.status_code}). Assuming Vanilla.")

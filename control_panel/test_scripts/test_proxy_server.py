@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from fastapi.testclient import TestClient
-
 from proxy_server import app
 
 client = TestClient(app)
@@ -31,4 +30,3 @@ def test_get_environments():
         # we might get an exception here or earlier.
         print(f"App initialization or request failed: {e}")
         # We don't fail the test if it's an auth issue, but we want to see it.
-        pass
