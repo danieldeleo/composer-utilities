@@ -1,6 +1,6 @@
 # Cloud Composer CI/CD & Automation Suite
 
-[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FGoogleCloudPlatform%2Fcomposer-utilities.git&cloudshell_workspace=control_panel%2F)
+[![Open in Cloud Shell](https://gstatic.com/cloudssh/images/open-btn.svg)](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https%3A%2F%2Fgithub.com%2FGoogleCloudPlatform%2Fcomposer-utilities.git&cloudshell_workspace=cicd%2F)
 
 This directory contains the automation, testing, and continuous integration/continuous deployment (CI/CD) pipelines for managing Apache Airflow DAGs and dependencies in Google Cloud Composer environments.
 
