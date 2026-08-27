@@ -5,7 +5,7 @@ from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 with DAG(
-    dag_id="bq_1000_queries_antipattern",
+    dag_id="bq_1000_queries_slow_parse",
     schedule_interval=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,

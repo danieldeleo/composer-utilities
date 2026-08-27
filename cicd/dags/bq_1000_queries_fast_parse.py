@@ -27,7 +27,7 @@ def generate_print_commands(job_id: str):
 
 
 with DAG(
-    dag_id="bq_1000_queries",
+    dag_id="bq_1000_queries_fast_parse",
     schedule_interval=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
