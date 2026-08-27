@@ -14,9 +14,7 @@
 from copy import deepcopy
 
 import pendulum
-from airflow.decorators import dag, task, task_group
-from airflow.models.param import Param
-from airflow.utils.task_group import TaskGroup
+from airflow.sdk import Param, TaskGroup, dag, task, task_group
 
 
 class CustomSleepyTaskGroup(TaskGroup):
@@ -48,6 +46,7 @@ class CustomSleepyTaskGroup(TaskGroup):
 
 
 @dag(
+    dag_id="sleepy_task_group",
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
@@ -69,7 +68,6 @@ class CustomSleepyTaskGroup(TaskGroup):
         "retries": 3,
         "retry_delay": pendulum.duration(minutes=5),
     },
-    # max_active_tasks=500,
 )
 def sleepy_task_group():
     @task
@@ -109,4 +107,5 @@ def sleepy_task_group():
     done_sleeping(out)
 
 
+# Instantiate the DAG
 sleepy_task_group()

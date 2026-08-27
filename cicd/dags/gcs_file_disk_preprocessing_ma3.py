@@ -16,9 +16,8 @@ An example DAG that uses KubernetesPodOperator to process a file from GCS in Man
 """
 
 import pendulum
-from airflow.decorators import dag
-from airflow.models.param import Param
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from airflow.sdk import Param, dag
 from kubernetes.client import models as k8s
 
 # Define default parameters for the DAG
@@ -29,6 +28,7 @@ OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
 
 
 @dag(
+    dag_id="gcs_file_disk_preprocessing_ma3",
     schedule=None,
     start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
