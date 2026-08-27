@@ -38,7 +38,7 @@ steps:
         # Configure Antigravity CLI
         mkdir -p ~/.config/antigravity
         cp cicd/gemini_fixes/settings.json ~/.config/antigravity/settings.json
-        
+
         # Run Antigravity CLI to optimize DAGs and run local tests
         agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
         Optimize the Airflow DAGs and run local tests; once
@@ -92,7 +92,7 @@ steps:
           AGY_FIX_BRANCH_NAME="agy-fix-${BUILD_ID}"
           git checkout -b "$$AGY_FIX_BRANCH_NAME"
           
-          git add -A 
+          git add -A
           git commit -m "Automated updates from Antigravity CLI"
           git push origin "$$AGY_FIX_BRANCH_NAME"
 
@@ -109,7 +109,7 @@ steps:
           in markdown format: @/tmp/pr_diff.txt. Focus on what changed
           and why. Do not include any conversational filler, just the markdown description.
           EOF
-          )" > /tmp/pr_body.md
+          )" | tee /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
