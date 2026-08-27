@@ -3,7 +3,10 @@ import datetime
 from airflow import DAG
 from airflow.decorators import task
 from airflow.operators.bash import BashOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+    BigQueryValueCheckOperator,
+)
 
 
 @task
@@ -26,6 +29,22 @@ def generate_print_commands(job_id: str):
     return f"echo {job_id}"
 
 
+@task
+def make_check_kwargs(job_id: str, number: str):
+    from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+
+    hook = BigQueryHook()
+    client = hook.get_client()
+    job = client.get_job(job_id)
+    dest = job.destination
+    table_id = f"{dest.project}.{dest.dataset_id}.{dest.table_id}"
+
+    return {
+        "sql": f"SELECT * FROM `{table_id}`",
+        "pass_value": int(number.strip()),
+    }
+
+
 with DAG(
     dag_id="bq_1000_queries_fast_parse",
     schedule_interval=None,
@@ -45,8 +64,21 @@ with DAG(
         task_id="run_select",
     ).expand(configuration=bq_configs)
 
+    check_kwargs = make_check_kwargs.expand(
+        job_id=bq_tasks.output, number=emit_number.output
+    )
+
+    check_values = BigQueryValueCheckOperator.partial(
+        task_id="check_value",
+        use_legacy_sql=False,
+    ).expand_kwargs(check_kwargs)
+
     print_commands = generate_print_commands.expand(job_id=bq_tasks.output)
 
     print_results = BashOperator.partial(
         task_id="print_result",
     ).expand(bash_command=print_commands)
+
+    # Note: Dependencies in dynamically mapped tasks are automatically inferred when
+    # outputs are passed to inputs, but we can enforce execution order for the check.
+    bq_tasks >> check_values >> print_results
