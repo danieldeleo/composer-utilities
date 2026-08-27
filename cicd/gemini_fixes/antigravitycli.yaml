@@ -38,15 +38,16 @@ steps:
         # Configure Antigravity CLI
         mkdir -p ~/.config/antigravity
         cp cicd/gemini_fixes/settings.json ~/.config/antigravity/settings.json
-
-        # Run agy commands
-        PROMPT="Optimize the Airflow DAGs and run local tests; once "
-        PROMPT+="finished, remove any temporary files created during testing. "
-        PROMPT+="Lastly, Run \`uvx ruff check --select I --fix && "
-        PROMPT+="uvx ruff check --fix --unsafe-fixes && uvx ruff format\` "
-        PROMPT+="only on the files you've changed to make sure that they're properly formatted."
-
-        agy --dangerously-skip-permissions --prompt "$$PROMPT"
+        
+        # Run Antigravity CLI to optimize DAGs and run local tests
+        agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
+        Optimize the Airflow DAGs and run local tests; once
+        finished, remove any temporary files created during testing.
+        Lastly, Run `uvx ruff check --select I --fix &&
+        uvx ruff check --fix --unsafe-fixes && uvx ruff format`
+        only on the files you've changed to make sure that they're properly formatted.
+        EOF
+        )"
     env:
       - 'AGY_ADC_AUTH=true'
       
@@ -91,7 +92,7 @@ steps:
           AGY_FIX_BRANCH_NAME="agy-fix-${BUILD_ID}"
           git checkout -b "$$AGY_FIX_BRANCH_NAME"
           
-          git add -A
+          git add -A 
           git commit -m "Automated updates from Antigravity CLI"
           git push origin "$$AGY_FIX_BRANCH_NAME"
 
@@ -102,11 +103,13 @@ steps:
           mkdir -p ~/.config/antigravity
           cp cicd/gemini_fixes/settings.json ~/.config/antigravity/settings.json
 
-          PROMPT="Generate a detailed pull request description for these changes "
-          PROMPT+="in markdown format: @/tmp/pr_diff.txt. Focus on what changed "
-          PROMPT+="and why. Do not include any conversational filler, just the markdown description."
-
-          agy --dangerously-skip-permissions --prompt "$$PROMPT" > /tmp/pr_body.md
+          # Generate PR description using Antigravity CLI
+          agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
+          Generate a detailed pull request description for these changes
+          in markdown format: @/tmp/pr_diff.txt. Focus on what changed
+          and why. Do not include any conversational filler, just the markdown description.
+          EOF
+          )" > /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
