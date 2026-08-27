@@ -13,6 +13,7 @@ with DAG(
 ) as dag:
     # Antipattern: Using a Python loop to statically generate 1000 separate tasks
     # This bloats the DAG definition size and makes the Airflow UI very slow to load
+    # The purpose of this DAG is to show how NOT to write this type of DAG.
     for i in range(1000):
         emit_number = BashOperator(
             task_id=f"emit_number_{i}",
