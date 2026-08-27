@@ -46,7 +46,7 @@ steps:
         PROMPT+="uvx ruff check --fix --unsafe-fixes && uvx ruff format\` "
         PROMPT+="only on the files you've changed to make sure that they're properly formatted."
 
-        agy --print "$$PROMPT"
+        agy --dangerously-skip-permissions --prompt "$$PROMPT"
     env:
       - 'AGY_ADC_AUTH=true'
       
@@ -106,7 +106,7 @@ steps:
           PROMPT+="in markdown format: @/tmp/pr_diff.txt. Focus on what changed "
           PROMPT+="and why. Do not include any conversational filler, just the markdown description."
 
-          agy --print "$$PROMPT" > /tmp/pr_body.md
+          agy --dangerously-skip-permissions --prompt "$$PROMPT" > /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
