@@ -14,4 +14,4 @@
 
 # Image versions listed in public docs:
 # https://docs.cloud.google.com/composer/docs/composer-versions#images
-composer-3-airflow-2.11.1-build.17
+composer-3-airflow-3.3.1-build.0
