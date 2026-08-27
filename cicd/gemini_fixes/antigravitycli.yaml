@@ -15,23 +15,23 @@ steps:
   - id : 'Run Antigravity CLI for local tests'
     name: 'ubuntu'
     entrypoint: 'bash'
-    args: 
+    args:
       - '-c'
       - |
         #!/usr/bin/env bash
-        
+
         # Enable exit-on-error mode
         set -eo pipefail
-        
+
         # Install dependencies
         apt-get update && apt-get install -y curl ca-certificates git docker.io ripgrep
-        
+
         # Download and install Antigravity CLI
         curl -fsSL https://antigravity.google/cli/install.sh | bash
-        
+
         # Add agy to PATH and execute it
         export PATH="$$HOME/.local/bin:$$PATH"
-        
+
         # Symlink the .agents directory to the project root so agy can discover the skills
         ln -sf cicd/gemini_fixes/.agents .agents
 
@@ -50,7 +50,7 @@ steps:
         )"
     env:
       - 'AGY_ADC_AUTH=true'
-      
+
   - id: 'Commit and push changes'
     name: 'ubuntu'
     entrypoint: 'bash'
@@ -59,39 +59,39 @@ steps:
       - '-c'
       - |
         #!/usr/bin/env bash
-        
+
         # Enable exit-on-error mode
         set -eo pipefail
 
         # Install dependencies
         apt-get update && apt-get install -y curl ca-certificates git
-        
+
         # Install GitHub CLI (gh)
         curl -sSLo /tmp/gh.tar.gz https://github.com/cli/cli/releases/download/v2.51.0/gh_2.51.0_linux_amd64.tar.gz
         tar -xzf /tmp/gh.tar.gz -C /tmp
         mv /tmp/gh_2.51.0_linux_amd64/bin/gh /usr/local/bin/
         rm -rf /tmp/gh.tar.gz /tmp/gh_2.51.0_linux_amd64
-        
+
         # Download and install Antigravity CLI
         curl -fsSL https://antigravity.google/cli/install.sh | bash
-        
+
         # Add agy to PATH and execute it
         export PATH="$$HOME/.local/bin:$$PATH"
-        
+
         # Remove the temporary .agents symlink so it doesn't trigger git status
         rm -f .agents
-        
+
         if [[ -n $$(git status -s) ]]; then
           echo "Changes detected. Creating a feature branch..."
           git config --global user.email "${SERVICE_ACCOUNT_EMAIL}"
           git config --global user.name "Cloud Build"
-          
+
           export GH_TOKEN=$$GITHUB_TOKEN
           gh auth setup-git
 
           AGY_FIX_BRANCH_NAME="agy-fix-${BUILD_ID}"
           git checkout -b "$$AGY_FIX_BRANCH_NAME"
-          
+
           git add -A
           git commit -m "Automated updates from Antigravity CLI"
           git push origin "$$AGY_FIX_BRANCH_NAME"
@@ -110,7 +110,7 @@ steps:
           and why. Do not include any conversational filler, just the markdown description.
           EOF
           )" | tee /tmp/pr_body.md
-          
+
           echo "Creating pull request on GitHub..."
           gh pr create \
             --title "Automated updates from Antigravity CLI" \
