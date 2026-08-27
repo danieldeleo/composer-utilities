@@ -2,7 +2,21 @@ import datetime
 
 from airflow import DAG
 from airflow.operators.bash import BashOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryInsertJobOperator,
+    BigQueryValueCheckOperator,
+)
+
+
+def get_destination_table(job_id: str) -> str:
+    from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+
+    hook = BigQueryHook()
+    client = hook.get_client()
+    job = client.get_job(job_id)
+    dest = job.destination
+    return f"{dest.project}.{dest.dataset_id}.{dest.table_id}"
+
 
 with DAG(
     dag_id="bq_1000_queries_slow_parse",
@@ -10,6 +24,7 @@ with DAG(
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
     tags=["bigquery", "load_test", "antipattern"],
+    user_defined_macros={"get_destination_table": get_destination_table},
 ) as dag:
     # Antipattern: Using a Python loop to statically generate 1000 separate tasks
     # This bloats the DAG definition size and makes the Airflow UI very slow to load
@@ -31,9 +46,16 @@ with DAG(
             },
         )
 
+        check_value = BigQueryValueCheckOperator(
+            task_id=f"check_value_{i}",
+            sql=f"SELECT * FROM `{{{{ get_destination_table(ti.xcom_pull(task_ids='run_select_{i}')) }}}}`",
+            pass_value=i,
+            use_legacy_sql=False,
+        )
+
         print_result = BashOperator(
             task_id=f"print_result_{i}",
             bash_command=f"echo {{{{ ti.xcom_pull(task_ids='run_select_{i}') }}}}",
         )
 
-        emit_number >> run_query >> print_result
+        emit_number >> run_query >> check_value >> print_result
