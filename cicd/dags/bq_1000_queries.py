@@ -28,7 +28,7 @@ def generate_print_commands(job_id: str):
 
 with DAG(
     dag_id="bq_1000_queries",
-    schedule_interval=None,
+    schedule=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
     tags=["bigquery", "load_test"],
