@@ -34,6 +34,27 @@ cicd/
 
 The main Cloud Build pipeline coordinates static checks, test execution inside matching Composer images, and deployment to the environments.
 
+```mermaid
+flowchart TD
+    CB[cloudbuild.yaml] -->|1. Executes| GCTI(get_composer_tagged_image.py)
+    GCTI -.->|Reads| CVT(composer_version.txt)
+    GCTI -.->|Returns Image URL| CB
+    
+    CB -->|2. Injects Image URL into| TD(test_dags.yaml)
+    CB -->|3. Submits child build using| TD
+    
+    TD -->|Runs tests in| TESTS[/tests/ Directory/]
+    TD -->|Installs deps from| REQ(dags/requirements.txt)
+    
+    CB -->|4. Wait for tests to pass| TD
+    
+    CB -->|5. Update Composer PyPI packages| REQ
+    CB -->|6. Rsync DAG files to GCS| DAGS[/dags/ Directory/]
+    
+    style CB fill:#1A73E8,stroke:#333,stroke-width:2px,color:#fff
+    style TD fill:#34A853,stroke:#333,stroke-width:2px,color:#fff
+```
+
 ### Execution Steps
 1. **Linting and Formatting Checks**: Runs `ruff check` and `ruff format --check` on Python files inside `cicd/` to enforce formatting and python style guides.
 2. **Resolve Docker Image**: Executes `get_composer_tagged_image.py` to retrieve the Google Cloud-hosted Docker image corresponding to the target environment version configured in `composer_version.txt`.
