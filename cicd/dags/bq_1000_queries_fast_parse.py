@@ -2,11 +2,11 @@ import datetime
 
 from airflow import DAG
 from airflow.decorators import task
-from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
     BigQueryValueCheckOperator,
 )
+from airflow.providers.standard.operators.bash import BashOperator
 
 
 @task
@@ -47,10 +47,14 @@ def make_check_kwargs(job_id: str, number: str):
 
 with DAG(
     dag_id="bq_1000_queries_fast_parse",
-    schedule_interval=None,
+    schedule=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
     tags=["bigquery", "load_test"],
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
 ) as dag:
     bash_commands = generate_bash_commands()
 
