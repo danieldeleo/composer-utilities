@@ -121,7 +121,6 @@ flowchart TD
     AGY_YAML[antigravitycli.yaml] -->|1. Executes| AGY_OPT(Antigravity CLI: Optimize DAGs)
     
     AGY_OPT -.->|Uses| SKILLS[/.agents/skills/]
-    AGY_OPT -.->|Configured by| SETTINGS(settings.json)
     AGY_OPT -.->|Formats Code| RUFF(uvx ruff)
     
     AGY_OPT -->|2. Evaluates File Diff| DIFF{git status}
@@ -143,7 +142,7 @@ flowchart TD
 ```
 
 **Execution Steps**
-1. **Environment Setup & Optimization**: Installs system dependencies, Antigravity CLI, and runs code optimization using target guidelines from local skills and `settings.json`. Finally formats code using `ruff`.
+1. **Environment Setup & Optimization**: Installs system dependencies, Antigravity CLI, and runs code optimization using target guidelines from local skills. Finally formats code using `ruff`.
 2. **Evaluate Changes**: Checks for local file modifications. If none exist, exits cleanly.
 3. **Automated PR**: If modifications exist, creates a new feature branch (`agy-fix-<build-id>`) and pushes it to GitHub.
 4. **Generate PR Description**: Invokes Antigravity CLI again to read the git diff and generate an accurate Markdown description of the changes.

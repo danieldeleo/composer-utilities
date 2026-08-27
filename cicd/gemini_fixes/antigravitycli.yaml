@@ -35,13 +35,8 @@ steps:
         # Symlink the .agents directory to the project root so agy can discover the skills
         ln -sf cicd/gemini_fixes/.agents .agents
 
-        # Configure Antigravity CLI settings
-        # https://antigravity.google/docs/cli/settings/#configuration-file-location
-        mkdir -p ~/.gemini/antigravity-cli
-        cp cicd/gemini_fixes/settings.json ~/.gemini/antigravity-cli/settings.json
-
         # Run Antigravity CLI to optimize DAGs and run local tests
-        agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
+        agy ${_AGY_FLAGS} --prompt "$(cat << 'EOF'
         Optimize the Airflow DAGs making any fixes necessary to pass all local tests.
         Once finished, remove any temporary files created during testing.
         Finally, run:
@@ -100,13 +95,8 @@ steps:
           echo "Generating PR description with Antigravity CLI..."
           git diff HEAD~1..HEAD > /tmp/pr_diff.txt
 
-          # Configure Antigravity CLI settings
-          # https://antigravity.google/docs/cli/settings/#configuration-file-location
-          mkdir -p ~/.gemini/antigravity-cli
-          cp cicd/gemini_fixes/settings.json ~/.gemini/antigravity-cli/settings.json
-
           # Generate PR description using Antigravity CLI
-          agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
+          agy ${_AGY_FLAGS} --prompt "$(cat << 'EOF'
           Generate a detailed pull request description for these changes
           in markdown format: @/tmp/pr_diff.txt. Focus on what changed
           and why. Do not include any conversational filler, just the markdown description.
@@ -127,6 +117,7 @@ steps:
       - 'AGY_ADC_AUTH=true'
 
 substitutions:
+  _AGY_FLAGS: '--model="Gemini 3.1 Pro (Low)" --add-dir /workspace --dangerously-skip-permissions --print-timeout=2h'
 
 options:
   logging: CLOUD_LOGGING_ONLY
