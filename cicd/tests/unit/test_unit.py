@@ -190,6 +190,8 @@ DAG_IDS = [
 def common_mocks():
     import datetime
 
+    import google.cloud.orchestration.airflow.service_v1 as orchestration_v1
+
     with (
         unittest.mock.patch(
             "airflow.models.Variable.get", return_value="mock_value", autospec=True
@@ -217,8 +219,9 @@ def common_mocks():
         unittest.mock.patch(
             "airflow.providers.google.cloud.hooks.gcs.GCSHook.get_conn", autospec=True
         ) as mock_get_conn,
-        unittest.mock.patch(
-            "google.cloud.orchestration.airflow.service_v1.EnvironmentsClient.save_snapshot",
+        unittest.mock.patch.object(
+            orchestration_v1.EnvironmentsClient,
+            "save_snapshot",
             autospec=True,
         ) as mock_save,
     ):
