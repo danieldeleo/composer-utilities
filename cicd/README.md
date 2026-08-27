@@ -115,12 +115,39 @@ A Python script that reads `composer_version.txt`, parses the Composer/Airflow v
 This submodule automates code analysis, applies Airflow best practices, and proposes changes via Pull Requests using the Antigravity CLI.
 
 ### Workflow Configuration (`antigravitycli.yaml`)
-1. **Environment Setup**: Installs system dependencies and the GitHub CLI (`gh`).
-2. **Install CLI**: Downloads and installs the Antigravity CLI via its installation script.
-3. **AI Code Optimization**:
-   - Mounts the local `.agents/skills/` directory.
-   - Prompts Antigravity CLI to analyze files and optimize DAGs according to target guidelines.
-4. **Automated PR**: Checks for changes. If modifications exist, it commits them to a new branch (`agy-fix-<build-id>`), pushes to GitHub, and uses the GitHub CLI (`gh`) to open a Pull Request against the base branch.
+
+```mermaid
+flowchart TD
+    AGY_YAML[antigravitycli.yaml] -->|1. Executes| AGY_OPT(Antigravity CLI: Optimize DAGs)
+    
+    AGY_OPT -.->|Uses| SKILLS[/.agents/skills/]
+    AGY_OPT -.->|Configured by| SETTINGS(settings.json)
+    AGY_OPT -.->|Formats Code| RUFF(uvx ruff)
+    
+    AGY_OPT -->|2. Evaluates File Diff| DIFF{git status}
+    
+    DIFF -- No Changes --> EXIT([Exit: No Action Required])
+    DIFF -- Changes Detected --> BRANCH[3. Create Feature Branch]
+    
+    BRANCH -->|4. Commit & Push| PUSH(git push origin)
+    
+    PUSH -->|5. Analyzes Changes| AGY_PR(Antigravity CLI: Generate PR Description)
+    AGY_PR -.->|Reads diff from| HEAD(git diff HEAD~1..HEAD)
+    
+    AGY_PR -->|6. Opens Pull Request| GH_PR(GitHub CLI: gh pr create)
+    
+    style AGY_YAML fill:#1A73E8,stroke:#333,stroke-width:2px,color:#fff
+    style AGY_OPT fill:#FBBC05,stroke:#333,stroke-width:2px,color:#000
+    style AGY_PR fill:#FBBC05,stroke:#333,stroke-width:2px,color:#000
+    style GH_PR fill:#34A853,stroke:#333,stroke-width:2px,color:#fff
+```
+
+**Execution Steps**
+1. **Environment Setup & Optimization**: Installs system dependencies, Antigravity CLI, and runs code optimization using target guidelines from local skills and `settings.json`. Finally formats code using `ruff`.
+2. **Evaluate Changes**: Checks for local file modifications. If none exist, exits cleanly.
+3. **Automated PR**: If modifications exist, creates a new feature branch (`agy-fix-<build-id>`) and pushes it to GitHub.
+4. **Generate PR Description**: Invokes Antigravity CLI again to read the git diff and generate an accurate Markdown description of the changes.
+5. **Open Pull Request**: Uses the GitHub CLI (`gh`) to submit a Pull Request back to the base branch.
 
 ### Target Best Practices (`.agents/skills/airflow-best-practices/SKILL.md`)
 The optimization tool validates and corrects DAG code against several Airflow best practices:
