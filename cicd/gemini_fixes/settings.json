@@ -3,6 +3,5 @@
   "add_dir": [
     "/workspace"
   ],
-  "dangerously_skip_permissions": true,
   "print_timeout": "2h"
 }
