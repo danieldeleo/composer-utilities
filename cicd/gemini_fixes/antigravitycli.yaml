@@ -108,8 +108,8 @@ steps:
           Generate a detailed pull request description for these changes
           in markdown format: @/tmp/pr_diff.txt. Focus on what changed
           and why. Do not include any conversational filler, just the markdown description.
-          EOF
-          )" | tee /tmp/pr_body.md
+        EOF
+        )" | tee /tmp/pr_body.md
 
           echo "Creating pull request on GitHub..."
           gh pr create \
