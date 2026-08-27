@@ -36,7 +36,7 @@ steps:
         ln -sf cicd/gemini_fixes/.agents .agents
 
         # Run agy commands
-        agy ${_AGY_FLAGS} --stream "Optimize the Airflow DAGs and run local tests; once finished, remove any temporary files created during testing. Lastly, Run \`uvx ruff check --select I --fix && uvx ruff check --fix --unsafe-fixes && uvx ruff format\` only on the files you've changed to make sure that they're properly formatted."
+        agy ${_AGY_FLAGS} --log-file /dev/stdout --print "Optimize the Airflow DAGs and run local tests; once finished, remove any temporary files created during testing. Lastly, Run \`uvx ruff check --select I --fix && uvx ruff check --fix --unsafe-fixes && uvx ruff format\` only on the files you've changed to make sure that they're properly formatted."
     env:
       - 'AGY_ADC_AUTH=true'
       

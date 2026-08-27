@@ -1,6 +1,7 @@
 import datetime
 
 from airflow import DAG
+from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 
 with DAG(
@@ -13,12 +14,25 @@ with DAG(
     # Antipattern: Using a Python loop to statically generate 1000 separate tasks
     # This bloats the DAG definition size and makes the Airflow UI very slow to load
     for i in range(1000):
-        BigQueryInsertJobOperator(
-            task_id=f"run_select_1_{i}",
+        emit_number = BashOperator(
+            task_id=f"emit_number_{i}",
+            bash_command=f"echo {i}",
+            do_xcom_push=True,
+        )
+
+        run_query = BigQueryInsertJobOperator(
+            task_id=f"run_select_{i}",
             configuration={
                 "query": {
-                    "query": "SELECT 1",
+                    "query": f"SELECT {{{{ ti.xcom_pull(task_ids='emit_number_{i}') }}}}",
                     "useLegacySql": False,
                 }
             },
         )
+
+        print_result = BashOperator(
+            task_id=f"print_result_{i}",
+            bash_command=f"echo {{{{ ti.xcom_pull(task_ids='run_select_{i}') }}}}",
+        )
+
+        emit_number >> run_query >> print_result
