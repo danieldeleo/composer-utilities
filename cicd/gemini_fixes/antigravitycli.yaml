@@ -35,8 +35,18 @@ steps:
         # Symlink the .agents directory to the project root so agy can discover the skills
         ln -sf cicd/gemini_fixes/.agents .agents
 
+        # Configure Antigravity CLI
+        mkdir -p ~/.config/antigravity
+        cp cicd/gemini_fixes/settings.json ~/.config/antigravity/settings.json
+
         # Run agy commands
-        agy ${_AGY_FLAGS} --log-file /dev/stdout --print "Optimize the Airflow DAGs and run local tests; once finished, remove any temporary files created during testing. Lastly, Run \`uvx ruff check --select I --fix && uvx ruff check --fix --unsafe-fixes && uvx ruff format\` only on the files you've changed to make sure that they're properly formatted."
+        PROMPT="Optimize the Airflow DAGs and run local tests; once "
+        PROMPT+="finished, remove any temporary files created during testing. "
+        PROMPT+="Lastly, Run \`uvx ruff check --select I --fix && "
+        PROMPT+="uvx ruff check --fix --unsafe-fixes && uvx ruff format\` "
+        PROMPT+="only on the files you've changed to make sure that they're properly formatted."
+
+        agy --print "$PROMPT"
     env:
       - 'AGY_ADC_AUTH=true'
       
@@ -84,10 +94,19 @@ steps:
           git add -A
           git commit -m "Automated updates from Antigravity CLI"
           git push origin "$$AGY_FIX_BRANCH_NAME"
-          
+
           echo "Generating PR description with Antigravity CLI..."
           git diff HEAD~1..HEAD > /tmp/pr_diff.txt
-          agy ${_AGY_FLAGS} --print "Generate a detailed pull request description for these changes in markdown format: @/tmp/pr_diff.txt. Focus on what changed and why. Do not include any conversational filler, just the markdown description." > /tmp/pr_body.md
+
+          # Configure Antigravity CLI
+          mkdir -p ~/.config/antigravity
+          cp cicd/gemini_fixes/settings.json ~/.config/antigravity/settings.json
+
+          PR_PROMPT="Generate a detailed pull request description for these changes "
+          PR_PROMPT+="in markdown format: @/tmp/pr_diff.txt. Focus on what changed "
+          PR_PROMPT+="and why. Do not include any conversational filler, just the markdown description."
+
+          agy --print "$PR_PROMPT" > /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
@@ -103,7 +122,6 @@ steps:
       - 'AGY_ADC_AUTH=true'
 
 substitutions:
-  _AGY_FLAGS: '--model="Gemini 3.1 Pro (Low)" --add-dir /workspace --dangerously-skip-permissions --print-timeout=2h'
 
 options:
   logging: CLOUD_LOGGING_ONLY
