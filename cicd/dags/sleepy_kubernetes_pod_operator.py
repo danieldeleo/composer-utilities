@@ -21,6 +21,7 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 
 
 @dag(
+    dag_id="sleepy_kubernetes_pod_operator",
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
