@@ -1,20 +1,20 @@
+import pendulum
 from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import days_ago
+from airflow.operators.empty import EmptyOperator
 
-# Airflow 3 Breaking Changes demonstrated here:
-# 1. schedule_interval argument is removed in Airflow 3. Use schedule instead.
-# 2. airflow.utils.dates.days_ago is removed in Airflow 3.
-# 3. DummyOperator from airflow.operators.dummy_operator is removed in Airflow 3.
 with DAG(
     dag_id="airflow2_example_schedule_interval",
-    schedule_interval="@daily",
-    start_date=days_ago(2),
+    schedule="@daily",
+    start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
+    default_args={
+        "retries": 2,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     tags=["airflow2", "compatibility_test"],
 ) as dag:
-    start = DummyOperator(task_id="start_task")
+    start = EmptyOperator(task_id="start_task")
 
-    end = DummyOperator(task_id="end_task")
+    end = EmptyOperator(task_id="end_task")
 
     start >> end

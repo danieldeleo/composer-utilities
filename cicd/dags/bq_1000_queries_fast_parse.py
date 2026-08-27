@@ -28,9 +28,13 @@ def generate_print_commands(job_id: str):
 
 with DAG(
     dag_id="bq_1000_queries_fast_parse",
-    schedule_interval=None,
+    schedule=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
+    default_args={
+        "retries": 2,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     tags=["bigquery", "load_test"],
 ) as dag:
     bash_commands = generate_bash_commands()
