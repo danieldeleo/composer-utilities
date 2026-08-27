@@ -1,38 +1,52 @@
 import datetime
 
 from airflow import DAG
+from airflow.decorators import task
 from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
+
+
+@task
+def generate_bash_commands():
+    return [f"echo {i}" for i in range(1000)]
+
+
+@task
+def make_bq_config(number: str):
+    return {
+        "query": {
+            "query": f"SELECT {number}",
+            "useLegacySql": False,
+        }
+    }
+
+
+@task
+def generate_print_commands(job_id: str):
+    return f"echo {job_id}"
+
 
 with DAG(
     dag_id="bq_1000_queries_antipattern",
     schedule_interval=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
-    tags=["bigquery", "load_test", "antipattern"],
+    tags=["bigquery", "load_test"],
 ) as dag:
-    # Antipattern: Using a Python loop to statically generate 1000 separate tasks
-    # This bloats the DAG definition size and makes the Airflow UI very slow to load
-    for i in range(1000):
-        emit_number = BashOperator(
-            task_id=f"emit_number_{i}",
-            bash_command=f"echo {i}",
-            do_xcom_push=True,
-        )
+    bash_commands = generate_bash_commands()
 
-        run_query = BigQueryInsertJobOperator(
-            task_id=f"run_select_{i}",
-            configuration={
-                "query": {
-                    "query": f"SELECT {{{{ ti.xcom_pull(task_ids='emit_number_{i}') }}}}",
-                    "useLegacySql": False,
-                }
-            },
-        )
+    emit_number = BashOperator.partial(task_id="emit_number", do_xcom_push=True).expand(
+        bash_command=bash_commands
+    )
 
-        print_result = BashOperator(
-            task_id=f"print_result_{i}",
-            bash_command=f"echo {{{{ ti.xcom_pull(task_ids='run_select_{i}') }}}}",
-        )
+    bq_configs = make_bq_config.expand(number=emit_number.output)
 
-        emit_number >> run_query >> print_result
+    bq_tasks = BigQueryInsertJobOperator.partial(
+        task_id="run_select",
+    ).expand(configuration=bq_configs)
+
+    print_commands = generate_print_commands.expand(job_id=bq_tasks.output)
+
+    print_results = BashOperator.partial(
+        task_id="print_result",
+    ).expand(bash_command=print_commands)
