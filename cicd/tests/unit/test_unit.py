@@ -25,7 +25,10 @@ PARSING_DURATION_THRESHOLD = 2.0
 def dagbag():
     dags_path = str((Path(__file__).parent.parent.parent / "dags").resolve())
     sys.path.insert(0, dags_path)
-    yield DagBag(dag_folder=dags_path, include_examples=False)
+    import airflow  # Used only to check version for backward compatibility
+
+    kwargs = {"include_examples": False} if airflow.__version__.startswith("2.") else {}
+    yield DagBag(dag_folder=dags_path, **kwargs)
 
 
 def test_dagbag_not_empty(dagbag):
