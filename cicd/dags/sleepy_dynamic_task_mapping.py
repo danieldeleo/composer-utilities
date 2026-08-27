@@ -16,12 +16,13 @@
 import datetime
 
 import pendulum
-from airflow.decorators import dag, task, task_group
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from airflow.sdk import dag, task, task_group
 from kubernetes.client import models as k8s
 
 
 @dag(
+    dag_id="sleepy_dynamic_task_mapping",
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,

@@ -16,11 +16,12 @@
 import datetime
 
 import pendulum
-from airflow.decorators import dag
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from airflow.sdk import dag
 
 
 @dag(
+    dag_id="sleepy_kubernetes_pod_operator",
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
@@ -53,4 +54,5 @@ def sleepy_kubernetes_pod_operator():
     )
 
 
+# Instantiate the DAG
 sleepy_kubernetes_pod_operator()
