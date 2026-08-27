@@ -35,12 +35,13 @@ steps:
         # Symlink the .agents directory to the project root so agy can discover the skills
         ln -sf cicd/gemini_fixes/.agents .agents
 
-        # Configure Antigravity CLI
+        # Configure Antigravity CLI settings
+        # https://antigravity.google/docs/cli/settings/#configuration-file-location
         mkdir -p ~/.gemini/antigravity-cli
         cp cicd/gemini_fixes/settings.json ~/.gemini/antigravity-cli/settings.json
 
         # Run Antigravity CLI to optimize DAGs and run local tests
-        agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
+        agy --prompt "$(cat << 'EOF'
         Optimize the Airflow DAGs and run local tests; once
         finished, remove any temporary files created during testing.
         Lastly, Run `uvx ruff check --select I --fix &&
@@ -99,12 +100,13 @@ steps:
           echo "Generating PR description with Antigravity CLI..."
           git diff HEAD~1..HEAD > /tmp/pr_diff.txt
 
-          # Configure Antigravity CLI
+          # Configure Antigravity CLI settings
+          # https://antigravity.google/docs/cli/settings/#configuration-file-location
           mkdir -p ~/.gemini/antigravity-cli
           cp cicd/gemini_fixes/settings.json ~/.gemini/antigravity-cli/settings.json
 
           # Generate PR description using Antigravity CLI
-          agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
+          agy --prompt "$(cat << 'EOF'
           Generate a detailed pull request description for these changes
           in markdown format: @/tmp/pr_diff.txt. Focus on what changed
           and why. Do not include any conversational filler, just the markdown description.
