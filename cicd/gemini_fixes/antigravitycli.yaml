@@ -36,8 +36,8 @@ steps:
         ln -sf cicd/gemini_fixes/.agents .agents
 
         # Configure Antigravity CLI
-        mkdir -p ~/.config/antigravity
-        cp cicd/gemini_fixes/settings.json ~/.config/antigravity/settings.json
+        mkdir -p ~/.gemini/antigravity-cli
+        cp cicd/gemini_fixes/settings.json ~/.gemini/antigravity-cli/settings.json
 
         # Run Antigravity CLI to optimize DAGs and run local tests
         agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
@@ -100,8 +100,8 @@ steps:
           git diff HEAD~1..HEAD > /tmp/pr_diff.txt
 
           # Configure Antigravity CLI
-          mkdir -p ~/.config/antigravity
-          cp cicd/gemini_fixes/settings.json ~/.config/antigravity/settings.json
+          mkdir -p ~/.gemini/antigravity-cli
+          cp cicd/gemini_fixes/settings.json ~/.gemini/antigravity-cli/settings.json
 
           # Generate PR description using Antigravity CLI
           agy --dangerously-skip-permissions --prompt "$(cat << 'EOF'
