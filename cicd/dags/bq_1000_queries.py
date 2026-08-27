@@ -1,5 +1,4 @@
-import datetime
-
+import pendulum
 from airflow import DAG
 from airflow.decorators import task
 from airflow.operators.bash import BashOperator
@@ -28,9 +27,13 @@ def generate_print_commands(job_id: str):
 
 with DAG(
     dag_id="bq_1000_queries",
-    schedule_interval=None,
-    start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
+    schedule=None,
+    start_date=pendulum.datetime(2024, 1, 1, tz="UTC"),
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     tags=["bigquery", "load_test"],
 ) as dag:
     bash_commands = generate_bash_commands()
