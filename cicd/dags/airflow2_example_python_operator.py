@@ -1,6 +1,6 @@
+import pendulum
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.utils.dates import days_ago
+from airflow.operators.python import PythonOperator
 
 # Airflow 3 Breaking Changes demonstrated here:
 # 1. airflow.operators.python_operator is removed (moved to airflow.operators.python in Airflow 2).
@@ -10,18 +10,17 @@ from airflow.utils.dates import days_ago
 
 def print_execution_date(**kwargs):
     # execution_date is no longer passed in Airflow 3
-    print(f"The execution date is: {kwargs.get('execution_date')}")
+    print(f"The execution date is: {kwargs.get('logical_date')}")
 
 
 with DAG(
     dag_id="airflow2_example_python_operator",
-    schedule_interval="@daily",
-    start_date=days_ago(2),
+    schedule="@daily",
+    start_date=pendulum.datetime(2024, 1, 1, tz="UTC"),
     catchup=False,
     tags=["airflow2", "compatibility_test"],
 ) as dag:
     print_date = PythonOperator(
         task_id="print_execution_date_task",
         python_callable=print_execution_date,
-        provide_context=True,
     )
