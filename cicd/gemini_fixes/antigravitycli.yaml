@@ -46,7 +46,7 @@ steps:
         PROMPT+="uvx ruff check --fix --unsafe-fixes && uvx ruff format\` "
         PROMPT+="only on the files you've changed to make sure that they're properly formatted."
 
-        agy --print "$PROMPT"
+        agy --print "$$PROMPT"
     env:
       - 'AGY_ADC_AUTH=true'
       
@@ -102,11 +102,11 @@ steps:
           mkdir -p ~/.config/antigravity
           cp cicd/gemini_fixes/settings.json ~/.config/antigravity/settings.json
 
-          PR_PROMPT="Generate a detailed pull request description for these changes "
-          PR_PROMPT+="in markdown format: @/tmp/pr_diff.txt. Focus on what changed "
-          PR_PROMPT+="and why. Do not include any conversational filler, just the markdown description."
+          PROMPT="Generate a detailed pull request description for these changes "
+          PROMPT+="in markdown format: @/tmp/pr_diff.txt. Focus on what changed "
+          PROMPT+="and why. Do not include any conversational filler, just the markdown description."
 
-          agy --print "$PR_PROMPT" > /tmp/pr_body.md
+          agy --print "$$PROMPT" > /tmp/pr_body.md
           
           echo "Creating pull request on GitHub..."
           gh pr create \
