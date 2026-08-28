@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import sys
-import unittest.mock
 from pathlib import Path
 
 import pytest
 from airflow.models import DagBag
 
-PARSING_DURATION_THRESHOLD = 10.0
+PARSING_DURATION_THRESHOLD = 2.0
 
 
 @pytest.fixture(scope="session")
@@ -183,79 +182,3 @@ DAG_IDS = [
     "sleepy_kubernetes_pod_operator",
     "sleepy_task_group",
 ]
-
-
-# Fixture to apply common mocks for all execution tests
-@pytest.fixture(autouse=True)
-def common_mocks():
-    import datetime
-
-    with (
-        unittest.mock.patch(
-            "airflow.models.Variable.get", return_value="mock_value", autospec=True
-        ),
-        unittest.mock.patch(
-            "airflow.providers.google.cloud.operators.bigquery.BigQueryInsertJobOperator.execute",
-            return_value=None,
-            autospec=True,
-        ),
-        unittest.mock.patch(
-            "airflow.providers.cncf.kubernetes.operators.pod.KubernetesPodOperator.execute",
-            return_value=None,
-            autospec=True,
-        ),
-        unittest.mock.patch(
-            "airflow.providers.google.cloud.hooks.gcs.GCSHook.exists",
-            return_value=True,
-            autospec=True,
-        ),
-        unittest.mock.patch(
-            "airflow.providers.google.cloud.hooks.gcs.GCSHook.get_size",
-            return_value=123,
-            autospec=True,
-        ),
-        unittest.mock.patch(
-            "airflow.providers.google.cloud.hooks.gcs.GCSHook.get_conn", autospec=True
-        ) as mock_get_conn,
-        unittest.mock.patch(
-            "google.cloud.orchestration.airflow.service_v1.EnvironmentsClient.save_snapshot",
-            autospec=True,
-        ) as mock_save,
-    ):
-        # Mock GCS client and bucket for trigger_snapshot task
-        mock_client = unittest.mock.MagicMock()
-        mock_bucket = unittest.mock.MagicMock()
-        mock_blob = unittest.mock.MagicMock()
-        mock_blob.name = "snapshots/project_id_location_env_2026-03-31T/airflow-database.postgres.sql.gz"
-        mock_blob.time_created = datetime.datetime.now(datetime.timezone.utc)
-        mock_bucket.list_blobs.return_value = [mock_blob]
-        mock_client.bucket.return_value = mock_bucket
-        mock_get_conn.return_value = mock_client
-
-        # Configure mock_save to return something with a snapshot_path attribute
-        mock_operation = unittest.mock.MagicMock()
-        mock_operation.result.return_value = unittest.mock.MagicMock(
-            snapshot_path="gs://mock/path"
-        )
-        mock_save.return_value = mock_operation
-        yield
-
-
-# @pytest.mark.parametrize("dag_id", DAG_IDS)
-# def test_dag_execution(dagbag, dag_id):
-#     """Runs dag.test() for each DAG with common mocks applied."""
-#     dag = dagbag.get_dag(dag_id)
-#     assert dag is not None, f"DAG {dag_id} not found in DagBag."
-#     try:
-#         dag.test()
-#     except Exception as e:
-#         print(f"Warning: dag.test() failed for {dag_id}: {e}")
-#         raise e
-
-
-# def pytest_collection_modifyitems(config, items):
-#     """Moves tests starting with 'test_dag_execution' to the end of the list and prints the order."""
-#     items.sort(key=lambda item: item.name.startswith("test_dag_execution"))
-#     print("\n[Pytest Order of Execution]:")
-#     for item in items:
-#         print(f"  {item.nodeid}")

@@ -209,11 +209,6 @@ def trigger_and_wait_for_dag(dag_id: str, conf: dict | None = None):
     assert state == "success", f"DAG {dag_id} failed with state: {state}"
 
 
-# def test_custom_parallel_task_group_example_execution():
-#     """Triggers the custom_parallel_task_group_example DAG and verifies it completes successfully."""
-#     trigger_and_wait_for_dag("custom_parallel_task_group_example")
-
-
 def test_sleepy_task_group_execution():
     """Triggers the sleepy_task_group DAG and verifies it completes successfully."""
     trigger_and_wait_for_dag(
