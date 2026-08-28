@@ -1,3 +1,17 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import datetime
 
 from airflow import DAG
@@ -7,6 +21,12 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
     BigQueryValueCheckOperator,
 )
+
+# Best Practice Notes:
+# 1. 'schedule_interval' is updated to 'schedule' for Airflow 3 compatibility.
+# 2. Dynamic task mapping (.expand) is used to scale 1,000 tasks dynamically without bloating the DAG parse time.
+# 3. BigQueryHook is called inside the task execution context rather than top-level (Best Practice 1 & 2).
+# 4. Standard default_args configured with retries and retry_delay (Best Practice 6).
 
 
 @task
@@ -31,6 +51,7 @@ def generate_print_commands(job_id: str):
 
 @task
 def make_check_kwargs(job_id: str, number: str):
+    # Hook initialization is scoped within the task callable to prevent top-level DB/API hits on DAG parsing
     from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
     hook = BigQueryHook()
@@ -47,9 +68,13 @@ def make_check_kwargs(job_id: str, number: str):
 
 with DAG(
     dag_id="bq_1000_queries_fast_parse",
-    schedule_interval=None,
+    schedule=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     tags=["bigquery", "load_test"],
 ) as dag:
     bash_commands = generate_bash_commands()
