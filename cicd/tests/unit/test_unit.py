@@ -173,12 +173,3 @@ def test_dag_cycle_example(dagbag):
 
     # Will raise AirflowDagCycleException if a cycle is found
     check_cycle(dag)
-
-
-# List of DAG IDs inferred from directory listing
-DAG_IDS = [
-    "gcs_file_disk_preprocessing",
-    "sleepy_dynamic_task_mapping",
-    "sleepy_kubernetes_pod_operator",
-    "sleepy_task_group",
-]
