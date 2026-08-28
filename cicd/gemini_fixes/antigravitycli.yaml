@@ -118,7 +118,7 @@ steps:
       - 'AGY_ADC_AUTH=true'
 
 substitutions:
-  _AGY_FLAGS: '--model="Gemini 3.7 Flash (Low)" --add-dir /workspace --dangerously-skip-permissions --print-timeout=2h'
+  _AGY_FLAGS: '--model="Gemini 3.7 Flash (High)" --add-dir /workspace --dangerously-skip-permissions --print-timeout=2h'
 
 options:
   logging: CLOUD_LOGGING_ONLY
