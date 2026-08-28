@@ -47,7 +47,7 @@ def make_check_kwargs(job_id: str, number: str):
 
 with DAG(
     dag_id="bq_1000_queries_fast_parse",
-    schedule_interval=None,
+    schedule=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
     tags=["bigquery", "load_test"],
