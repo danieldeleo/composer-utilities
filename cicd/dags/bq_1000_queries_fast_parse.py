@@ -1,3 +1,17 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import datetime
 
 from airflow import DAG
@@ -9,6 +23,7 @@ from airflow.providers.google.cloud.operators.bigquery import (
 )
 
 
+# Rule 1 & Rule 7: Dynamic task mapping keeps DAG parse fast
 @task
 def generate_bash_commands():
     return [f"echo {i}" for i in range(1000)]
@@ -31,6 +46,7 @@ def generate_print_commands(job_id: str):
 
 @task
 def make_check_kwargs(job_id: str, number: str):
+    # Rule 1 & Rule 2: BigQueryHook client queries are kept inside task callable execution context
     from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
     hook = BigQueryHook()
@@ -48,9 +64,15 @@ def make_check_kwargs(job_id: str, number: str):
 with DAG(
     dag_id="bq_1000_queries_fast_parse",
     schedule=None,
+    # Rule 4: Fixed static start_date
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
     tags=["bigquery", "load_test"],
+    # Rule 6: Comprehensive default_args with retries
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
 ) as dag:
     bash_commands = generate_bash_commands()
 
