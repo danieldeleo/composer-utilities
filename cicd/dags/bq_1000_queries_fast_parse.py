@@ -8,6 +8,12 @@ from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryValueCheckOperator,
 )
 
+# Best Practice: Default arguments to handle transient failures gracefully
+default_args = {
+    "retries": 2,
+    "retry_delay": datetime.timedelta(minutes=5),
+}
+
 
 @task
 def generate_bash_commands():
@@ -50,6 +56,7 @@ with DAG(
     schedule=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
+    default_args=default_args,
     tags=["bigquery", "load_test"],
 ) as dag:
     bash_commands = generate_bash_commands()
