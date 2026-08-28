@@ -37,6 +37,7 @@ steps:
 
         # Run Antigravity CLI to optimize DAGs and run local tests
         agy ${_AGY_FLAGS} --prompt "$(cat << 'EOF'
+        /local-airflow-unit-tests
         Optimize the Airflow DAGs making any fixes necessary to pass all local tests.
         Once finished, remove any temporary files created during testing.
         Finally, run:
