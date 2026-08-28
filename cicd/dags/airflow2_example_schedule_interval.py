@@ -1,20 +1,17 @@
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import days_ago
+import datetime
 
-# Airflow 3 Breaking Changes demonstrated here:
-# 1. schedule_interval argument is removed in Airflow 3. Use schedule instead.
-# 2. airflow.utils.dates.days_ago is removed in Airflow 3.
-# 3. DummyOperator from airflow.operators.dummy_operator is removed in Airflow 3.
+from airflow import DAG
+from airflow.operators.empty import EmptyOperator
+
 with DAG(
     dag_id="airflow2_example_schedule_interval",
-    schedule_interval="@daily",
-    start_date=days_ago(2),
+    schedule="@daily",
+    start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
-    tags=["airflow2", "compatibility_test"],
+    tags=["airflow3", "compatibility_test"],
 ) as dag:
-    start = DummyOperator(task_id="start_task")
+    start = EmptyOperator(task_id="start_task")
 
-    end = DummyOperator(task_id="end_task")
+    end = EmptyOperator(task_id="end_task")
 
     start >> end
