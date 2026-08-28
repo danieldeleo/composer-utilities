@@ -23,6 +23,10 @@ with DAG(
     schedule=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     tags=["bigquery", "load_test", "antipattern"],
     user_defined_macros={"get_destination_table": get_destination_table},
 ) as dag:

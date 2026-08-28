@@ -1,20 +1,26 @@
-from airflow import DAG
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.utils.dates import days_ago
+import datetime
 
-# Airflow 3 Breaking Changes demonstrated here:
-# 1. schedule_interval argument is removed in Airflow 3. Use schedule instead.
-# 2. airflow.utils.dates.days_ago is removed in Airflow 3.
-# 3. DummyOperator from airflow.operators.dummy_operator is removed in Airflow 3.
+from airflow import DAG
+from airflow.operators.empty import EmptyOperator
+
+# Best Practices Applied:
+# 1. Start dates are fixed and static (Rule 4).
+# 2. Replaced deprecated schedule_interval with schedule.
+# 3. Replaced deprecated DummyOperator with EmptyOperator.
+# 4. Added comprehensive default_args with retries and retry_delay (Rule 6).
 with DAG(
     dag_id="airflow2_example_schedule_interval",
-    schedule_interval="@daily",
-    start_date=days_ago(2),
+    schedule="@daily",
+    start_date=datetime.datetime(2023, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     tags=["airflow2", "compatibility_test"],
 ) as dag:
-    start = DummyOperator(task_id="start_task")
+    start = EmptyOperator(task_id="start_task")
 
-    end = DummyOperator(task_id="end_task")
+    end = EmptyOperator(task_id="end_task")
 
     start >> end
