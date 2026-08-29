@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 from airflow.models import DagBag
+from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 
 PARSING_DURATION_THRESHOLD = 2.0
 
@@ -135,7 +136,6 @@ def test_task_properties_example(dagbag):
 
 def test_kubernetes_pod_operator_namespace(dagbag):
     """Tests that any KubernetesPodOperator uses the 'composer-user-workloads' namespace."""
-    from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 
     invalid_tasks = []
     for dag_id, dag in dagbag.dags.items():
