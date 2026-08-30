@@ -26,6 +26,13 @@ def dagbag():
     sys.path.insert(0, dags_path)
     import airflow  # Used only to check version for backward compatibility
 
+    # Pre-import provider packages to ensure parsing benchmarks measure DAG construction
+    try:
+        import airflow.providers.cncf.kubernetes.operators.pod
+        import airflow.providers.google.cloud.operators.bigquery
+    except ImportError:
+        pass
+
     kwargs = {"include_examples": False} if airflow.__version__.startswith("2.") else {}
     yield DagBag(dag_folder=dags_path, **kwargs)
 

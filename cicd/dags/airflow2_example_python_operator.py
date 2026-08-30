@@ -1,27 +1,35 @@
-from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.utils.dates import days_ago
+import datetime
 
-# Airflow 3 Breaking Changes demonstrated here:
-# 1. airflow.operators.python_operator is removed (moved to airflow.operators.python in Airflow 2).
-# 2. provide_context=True in PythonOperator is removed (deprecated in Airflow 2).
-# 3. execution_date in kwargs is removed (deprecated in Airflow 2, replaced by logical_date).
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+
+# Airflow 3 Breaking Changes and Best Practice Updates:
+# 1. airflow.operators.python_operator moved to airflow.operators.python.
+# 2. provide_context=True in PythonOperator was removed (context is automatically provided).
+# 3. execution_date was replaced by logical_date in context kwargs.
+# 4. schedule_interval was replaced by schedule.
+# 5. Dynamic start_date replaced with a static datetime.
+# 6. default_args configured with standard retries and retry_delay.
 
 
 def print_execution_date(**kwargs):
-    # execution_date is no longer passed in Airflow 3
-    print(f"The execution date is: {kwargs.get('execution_date')}")
+    # In Airflow 3, logical_date replaces execution_date
+    logical_date = kwargs.get("logical_date")
+    print(f"The logical execution date is: {logical_date}")
 
 
 with DAG(
     dag_id="airflow2_example_python_operator",
-    schedule_interval="@daily",
-    start_date=days_ago(2),
+    schedule="@daily",
+    start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
+    default_args={
+        "retries": 3,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
     tags=["airflow2", "compatibility_test"],
 ) as dag:
     print_date = PythonOperator(
         task_id="print_execution_date_task",
         python_callable=print_execution_date,
-        provide_context=True,
     )
