@@ -12,6 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 steps:
+  - id: 'Install agent skills'
+    name: 'node:20'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        #!/usr/bin/env bash
+
+        # Enable exit-on-error mode
+        set -eo pipefail
+
+        # Copy local skills into temporary .agents directory in workspace
+        mkdir -p .agents/skills
+        cp -r cicd/gemini_fixes/.agents/skills/* .agents/skills/
+
+        # Install managed-airflow-dag-authoring skill from google/skills using npx
+        npx -y skills add google/skills --skill managed-airflow-dag-authoring -y
+
   - id : 'Run Antigravity CLI for local tests'
     name: 'ubuntu'
     entrypoint: 'bash'
@@ -31,9 +49,6 @@ steps:
 
         # Add agy to PATH and execute it
         export PATH="$$HOME/.local/bin:$$PATH"
-
-        # Symlink the .agents directory to the project root so agy can discover the skills
-        ln -sf cicd/gemini_fixes/.agents .agents
 
         # Run Antigravity CLI to optimize DAGs and run local tests
         agy ${_AGY_FLAGS} --prompt "$(cat << 'EOF'
@@ -75,8 +90,8 @@ steps:
         # Add agy to PATH and execute it
         export PATH="$$HOME/.local/bin:$$PATH"
 
-        # Remove the temporary .agents symlink so it doesn't trigger git status
-        rm -f .agents
+        # Remove the temporary .agents directory so it's not included in the commit
+        rm -rf .agents
 
         if [[ -n $$(git status -s) ]]; then
           echo "Changes detected. Creating a feature branch..."

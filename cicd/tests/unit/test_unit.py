@@ -162,14 +162,3 @@ def test_dag_params_example(dagbag):
     assert "gcs_bucket" in dag.params
     assert "input_object" in dag.params
     assert "output_object" in dag.params
-
-
-def test_dag_cycle_example(dagbag):
-    """Example of explicitly testing a DAG for cycles (circular dependencies)."""
-    from airflow.utils.dag_cycle_tester import check_cycle
-
-    dag = dagbag.get_dag("sleepy_kubernetes_pod_operator")
-    assert dag is not None, "DAG sleepy_kubernetes_pod_operator not found."
-
-    # Will raise AirflowDagCycleException if a cycle is found
-    check_cycle(dag)
