@@ -48,7 +48,6 @@ class CustomSleepyTaskGroup(TaskGroup):
 
 
 @dag(
-    dag_id="sleepy_task_group",
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
