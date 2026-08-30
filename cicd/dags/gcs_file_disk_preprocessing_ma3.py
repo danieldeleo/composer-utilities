@@ -29,7 +29,6 @@ OUTPUT_OBJECT = "path/to/your/processed_file.txt"  # <--- CHANGE THIS
 
 
 @dag(
-    dag_id="gcs_file_disk_preprocessing_ma3",
     schedule=None,
     start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
