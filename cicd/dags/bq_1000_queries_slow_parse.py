@@ -1,12 +1,11 @@
 import datetime
 
-from airflow import DAG
-from airflow.decorators import task
-from airflow.operators.bash import BashOperator
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryInsertJobOperator,
     BigQueryValueCheckOperator,
 )
+from airflow.providers.standard.operators.bash import BashOperator
+from airflow.sdk import DAG, task
 
 # Best practices: Use dynamic task mapping (.expand) instead of a top-level Python loop
 # creating thousands of static tasks. Static loops severely degrade DAG parsing performance

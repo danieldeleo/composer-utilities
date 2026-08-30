@@ -1,7 +1,7 @@
 import datetime
 
-from airflow import DAG
-from airflow.operators.empty import EmptyOperator
+from airflow.providers.standard.operators.empty import EmptyOperator
+from airflow.sdk import DAG
 
 # Best practices: Use fixed static start_date, schedule parameter instead of schedule_interval,
 # EmptyOperator instead of deprecated DummyOperator, and default_args with retries.

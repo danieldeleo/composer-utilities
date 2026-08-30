@@ -16,8 +16,8 @@
 import datetime
 
 import pendulum
-from airflow.decorators import dag, task, task_group
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from airflow.sdk import dag, task, task_group
 from kubernetes.client import models as k8s
 
 
