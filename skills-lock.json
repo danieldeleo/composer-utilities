@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "managed-airflow-dag-authoring": {
+      "source": "google/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloud/managed-airflow-dag-authoring/SKILL.md",
+      "computedHash": "41ab4d06d0ec93abe0a5c42ae1ff3b6a9e12682bff9f530368eced57a22bf39f"
+    }
+  }
+}
