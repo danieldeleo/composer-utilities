@@ -27,8 +27,8 @@ steps:
         mkdir -p .agents/skills
         cp -r cicd/gemini_fixes/.agents/skills/* .agents/skills/
 
-        # Install managed-airflow-dag-authoring skill from google/skills using npx
-        npx -y skills add google/skills --skill managed-airflow-dag-authoring -y
+        # Install managed-airflow-dag-authoring skill from google/skills using npx (scoped to antigravity-cli only)
+        npx -y skills add google/skills --skill managed-airflow-dag-authoring --agent antigravity-cli -y
 
   - id : 'Run Antigravity CLI for local tests'
     name: 'ubuntu'
@@ -90,8 +90,8 @@ steps:
         # Add agy to PATH and execute it
         export PATH="$$HOME/.local/bin:$$PATH"
 
-        # Remove the temporary .agents directory so it's not included in the commit
-        rm -rf .agents
+        # Remove temporary skill directories and files so they're not included in the commit
+        rm -rf .agents .claude skills-lock.json
 
         if [[ -n $$(git status -s) ]]; then
           echo "Changes detected. Creating a feature branch..."
