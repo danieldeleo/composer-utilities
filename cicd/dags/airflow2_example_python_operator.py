@@ -1,27 +1,32 @@
+import pendulum
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.utils.dates import days_ago
+from airflow.operators.python import PythonOperator
 
-# Airflow 3 Breaking Changes demonstrated here:
-# 1. airflow.operators.python_operator is removed (moved to airflow.operators.python in Airflow 2).
-# 2. provide_context=True in PythonOperator is removed (deprecated in Airflow 2).
-# 3. execution_date in kwargs is removed (deprecated in Airflow 2, replaced by logical_date).
+# Airflow 3 Best Practices & Compatibility Updates:
+# 1. PythonOperator is imported from airflow.operators.python.
+# 2. provide_context parameter is removed in Airflow 3.
+# 3. logical_date is used instead of the deprecated execution_date.
+# 4. schedule is used instead of deprecated schedule_interval.
+# 5. Fixed static start_date is used instead of dynamic dates like days_ago.
 
 
 def print_execution_date(**kwargs):
-    # execution_date is no longer passed in Airflow 3
-    print(f"The execution date is: {kwargs.get('execution_date')}")
+    # In Airflow 3, logical_date replaces execution_date in context
+    print(f"The execution date is: {kwargs.get('logical_date')}")
 
 
 with DAG(
     dag_id="airflow2_example_python_operator",
-    schedule_interval="@daily",
-    start_date=days_ago(2),
+    schedule="@daily",
+    start_date=pendulum.datetime(2023, 1, 1, tz="UTC"),
     catchup=False,
+    default_args={
+        "retries": 2,
+        "retry_delay": pendulum.duration(minutes=5),
+    },
     tags=["airflow2", "compatibility_test"],
 ) as dag:
     print_date = PythonOperator(
         task_id="print_execution_date_task",
         python_callable=print_execution_date,
-        provide_context=True,
     )
