@@ -66,11 +66,7 @@ def sleepy_dynamic_task_mapping():
                 requests={
                     "cpu": "100m",
                     "memory": "64Mi",
-                },
-                limits={
-                    "cpu": "100m",
-                    "memory": "64Mi",
-                },
+                }
             ),
         )
 
