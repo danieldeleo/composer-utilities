@@ -67,17 +67,11 @@ def test_gcs_file_disk_preprocessing(dagbag):
 
 def test_sleepy_dynamic_task_mapping_structure(dagbag):
     dag = dagbag.get_dag("sleepy_dynamic_task_mapping")
-    assert dag is not None
+    assert dag is not None, "DAG sleepy_dynamic_task_mapping not found."
     # get_sleepy_minutes and the expanded task group
     # Note: in TaskFlow, the number of tasks might be different depending on how they are counted
     assert len(dag.tasks) >= 2
-
-
-def test_sleepy_kubernetes_pod_operator_structure(dagbag):
-    dag = dagbag.get_dag("sleepy_kubernetes_pod_operator")
-    assert dag is not None
-    assert len(dag.tasks) == 1
-    assert dag.tasks[0].task_id == "sleep"
+    assert "sleep_for.sleepy_pod" in [task.task_id for task in dag.tasks]
 
 
 def test_sleepy_task_group_structure(dagbag):
@@ -114,19 +108,19 @@ def test_dag_tags_example(dagbag):
 
 def test_dag_default_args_example(dagbag):
     """Example of testing that a DAG has specific default_args configured."""
-    dag = dagbag.get_dag("sleepy_kubernetes_pod_operator")
-    assert dag is not None, "DAG sleepy_kubernetes_pod_operator not found."
+    dag = dagbag.get_dag("sleepy_dynamic_task_mapping")
+    assert dag is not None, "DAG sleepy_dynamic_task_mapping not found."
     assert "retries" in dag.default_args
     assert dag.default_args["retries"] >= 3
 
 
 def test_task_properties_example(dagbag):
     """Example of testing specific properties of a task."""
-    dag = dagbag.get_dag("sleepy_kubernetes_pod_operator")
-    assert dag is not None, "DAG sleepy_kubernetes_pod_operator not found."
+    dag = dagbag.get_dag("sleepy_dynamic_task_mapping")
+    assert dag is not None, "DAG sleepy_dynamic_task_mapping not found."
 
     # Retrieve the specific task
-    task = dag.get_task("sleep")
+    task = dag.get_task("sleep_for.sleepy_pod")
 
     # Check properties
     assert task.image == "gcr.io/google.com/cloudsdktool/google-cloud-cli:latest"
