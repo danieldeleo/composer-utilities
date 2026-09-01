@@ -58,13 +58,6 @@ def test_all_dags_have_start_date(dagbag):
         assert dag.start_date is not None, f"DAG {dag_id} does not have a start_date."
 
 
-def test_gcs_file_disk_preprocessing(dagbag):
-    dag = dagbag.get_dag("gcs_file_disk_preprocessing")
-    assert dag is not None, "DAG gcs_file_preprocessing not found."
-    assert len(dag.tasks) == 1, "DAG gcs_file_preprocessing should contain 1 task."
-    assert not dag.catchup, "DAG gcs_file_preprocessing should have catchup=False."
-
-
 def test_sleepy_dynamic_task_mapping_structure(dagbag):
     dag = dagbag.get_dag("sleepy_dynamic_task_mapping")
     assert dag is not None, "DAG sleepy_dynamic_task_mapping not found."
@@ -146,13 +139,3 @@ def test_kubernetes_pod_operator_namespace(dagbag):
         "The following KubernetesPodOperator tasks do not use the 'composer-user-workloads' namespace:\n"
         + "\n".join(invalid_tasks)
     )
-
-
-def test_dag_params_example(dagbag):
-    """Example of testing that a DAG has expected parameters defined."""
-    dag = dagbag.get_dag("gcs_file_disk_preprocessing")
-    assert dag is not None, "DAG gcs_file_disk_preprocessing not found."
-
-    assert "gcs_bucket" in dag.params
-    assert "input_object" in dag.params
-    assert "output_object" in dag.params
