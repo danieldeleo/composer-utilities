@@ -47,8 +47,13 @@ docker run -it \
 
 ### 3. Initialize and Run Tests (Inside the Container)
 
-Once inside the container, you can set up the environment and run pytest by following the bash script below.
-Make sure that all the test results are printed out to Cloud Build via standard output so that they're visible in the Cloud Build logs.
+Once inside the container, you can run the test script directly:
+
+```bash
+/workspace/cicd/run_tests.sh
+```
+
+Alternatively, you can manually execute the steps below. Make sure that all test results are printed out via standard output:
 
 ```bash
 # Set up environment variables

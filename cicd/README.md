@@ -11,7 +11,7 @@ This directory contains the automation, testing, and continuous integration/cont
 ```
 cicd/
 ├── cloudbuild.yaml                  # Main Cloud Build CI/CD entrypoint pipeline
-├── test_dags.yaml                   # Child Cloud Build configuration for containerized Airflow testing
+├── run_tests.sh                     # Test execution script run inside the Composer container
 ├── composer_version.txt             # Target Cloud Composer & Airflow version definition
 ├── get_composer_tagged_image.py     # Python script to resolve the target environment base Docker image
 ├── dags/                            # Composer DAGs folder synchronized to environments
@@ -32,53 +32,52 @@ cicd/
 
 ## 1. Main CI/CD Pipeline (`cloudbuild.yaml`)
 
-The main Cloud Build pipeline coordinates static checks, test execution inside matching Composer images, and deployment to the environments.
+The main Cloud Build pipeline coordinates static checks, containerized test execution inside matching Composer images (via Docker without child builds), and deployment to the environments.
 
 ```mermaid
 flowchart TD
-    CB[cloudbuild.yaml] -->|1. Executes| GCTI(get_composer_tagged_image.py)
+    CB[cloudbuild.yaml] -->|1. Runs concurrently| RUFF(Ruff Linter & Formatter)
+    CB -->|1. Runs concurrently| GCTI(get_composer_tagged_image.py)
     GCTI -.->|Reads| CVT(composer_version.txt)
-    GCTI -.->|Returns Image URL| CB
+    GCTI -.->|Writes Tag| CTAG(.composer_image_tag)
     
-    CB -->|2. Injects Image URL into| TD(test_dags.yaml)
-    CB -->|3. Submits child build using| TD
+    CB -->|2. Runs Docker Container using| CTAG
+    CB -->|2. Executes inside container| RT(run_tests.sh)
+    RT -->|Runs tests in| TESTS[/tests/ Directory/]
+    RT -->|Installs deps from| REQ(dags/requirements.txt)
     
-    TD -->|Runs tests in| TESTS[/tests/ Directory/]
-    TD -->|Installs deps from| REQ(dags/requirements.txt)
-    
-    CB -->|4. Wait for tests to pass| TD
-    
-    CB -->|5. Update Composer PyPI packages| REQ
-    CB -->|6. Rsync DAG files to GCS| DAGS[/dags/ Directory/]
+    CB -->|3. Update Composer PyPI packages| REQ
+    CB -->|4. Rsync DAG files to GCS| DAGS[/dags/ Directory/]
     
     style CB fill:#1A73E8,stroke:#333,stroke-width:2px,color:#fff
-    style TD fill:#34A853,stroke:#333,stroke-width:2px,color:#fff
+    style RT fill:#34A853,stroke:#333,stroke-width:2px,color:#fff
 ```
 
 ### Execution Steps
-1. **Linting and Formatting Checks**: Runs `ruff check` and `ruff format --check` on Python files inside `cicd/` to enforce formatting and python style guides.
-2. **Resolve Docker Image**: Executes `get_composer_tagged_image.py` to retrieve the Google Cloud-hosted Docker image corresponding to the target environment version configured in `composer_version.txt`.
-3. **Trigger Testing Container**:
-   - Replaces the placeholder `REPLACE_WITH_COMPOSER_TAGGED_IMAGE` in `test_dags.yaml` with the resolved image tag.
-   - Spawns a nested/child Cloud Build job via `gcloud builds submit --config test_dags.yaml` to run unit and integration tests inside that container.
+1. **Linting and Formatting Checks**: Concurrently runs `ruff check` and `ruff format --check` on Python files inside `cicd/` to enforce formatting and python style guides.
+2. **Resolve Docker Image**: Concurrently executes `get_composer_tagged_image.py` to retrieve the Google Cloud-hosted Docker image corresponding to the target environment version configured in `composer_version.txt`.
+3. **Execute Testing Container Directly via Docker**:
+   - Launches the resolved Cloud Composer image directly in Docker (`docker run --rm -v /workspace:/workspace ...`).
+   - Runs `cicd/run_tests.sh` inside the container, streaming all logs directly to the main Cloud Build console without spawning a nested child build.
 4. **Deploy and Synchronize**:
-   - **Only runs if the nested testing steps pass.**
+   - **Only runs if linting, formatting, and tests pass.**
    - Performs a recursive synchronization using `gcloud storage rsync` to sync files from `cicd/dags/` to the `dags/` folder of all Composer environments in the target regions (defaulting to `us-east4` and `us-central1`).
    - Updates the PyPI packages on the environment using `gcloud composer environments update --update-pypi-packages-from-file cicd/dags/requirements.txt`, ignoring redundant calls if there are no package changes.
 
 ---
 
-## 2. Test Execution Container (`test_dags.yaml`)
+## 2. Test Execution Script (`run_tests.sh`)
 
-This configuration runs inside the resolved Cloud Composer Docker container to ensure exact runtime parity with production.
+This script executes inside the target Cloud Composer Docker container (either directly in `cloudbuild.yaml`, via Antigravity CLI, or during local development) to ensure exact runtime parity with production.
 
 ### Execution Steps
 1. **Initialize Directory Permissions**: Pre-creates Airflow UI build asset directories with correct ownership (`airflow:`) to avoid write-permission failures under newer Airflow releases.
 2. **Install Dependencies with Constraints**:
    - Freezes current container package versions to `/tmp/constraints.txt`.
-   - Installs libraries specified in `cicd/dags/requirements.txt` using the frozen list as constraints (`--constraint /tmp/constraints.txt`) to prevent package conflict errors.
+   - Strips `apache-airflow-providers-google` from constraints to allow version upgrades defined in `requirements.txt`.
+   - Installs libraries specified in `requirements.txt` using the frozen list as constraints (`--constraint /tmp/constraints.txt`) to prevent package conflict errors.
 3. **Start Standalone Airflow**: Launches Airflow in standalone mode in the background and polls `airflow db check` and `http://localhost:8080` until the webserver is ready.
-4. **Run Pytest**: Executes tests inside `/workspace/tests` (both unit and integration tests).
+4. **Run Pytest**: Executes tests inside `tests/` (both unit and integration tests).
 
 ---
 

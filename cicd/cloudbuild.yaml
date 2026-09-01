@@ -25,25 +25,34 @@ steps:
       - format
       - --check
       - cicd
-  - id : 'Submit child Cloud Build job to unit test DAGs on specific Composer image version'
-    name: gcr.io/cloud-builders/gcloud
+  - id : 'Resolve Composer tagged image'
+    name: 'gcr.io/cloud-builders/gcloud'
+    waitFor: ['-']
     script: |
       #!/usr/bin/env bash
-      
-      # Enable exit-on-error mode
       set -eo pipefail
-      
-      # Get Composer tagged image using the helper script
-      COMPOSER_TAGGED_IMAGE=$(python3 /workspace/cicd/get_composer_tagged_image.py)
-      
-      # Replace COMPOSER_TAGGED_IMAGE variable in test_dags.yaml
-      sed -i -e "s|REPLACE_WITH_COMPOSER_TAGGED_IMAGE|$COMPOSER_TAGGED_IMAGE|g" /workspace/cicd/test_dags.yaml
-      
-      # Submit a new build using gcloud builds submit and poll
-      gcloud builds submit --config /workspace/cicd/test_dags.yaml --region=$LOCATION --polling-interval=10 --service-account=$SERVICE_ACCOUNT /workspace/cicd
-    env:
-      - LOCATION=$LOCATION
-      - SERVICE_ACCOUNT=$SERVICE_ACCOUNT
+      python3 /workspace/cicd/get_composer_tagged_image.py > /workspace/.composer_image_tag
+      echo "Resolved Composer tagged image: $(cat /workspace/.composer_image_tag)"
+
+  - id : 'Run unit and integration tests on Airflow DAGs'
+    name: 'gcr.io/cloud-builders/docker'
+    waitFor:
+      - 'Check for linting errors'
+      - 'Check for formatting errors'
+      - 'Resolve Composer tagged image'
+    script: |
+      #!/usr/bin/env bash
+      set -eo pipefail
+
+      COMPOSER_TAGGED_IMAGE=$(cat /workspace/.composer_image_tag)
+      echo "Running tests in Composer container: $COMPOSER_TAGGED_IMAGE"
+
+      docker run --rm \
+        -v /workspace:/workspace \
+        -w /workspace \
+        --entrypoint /bin/bash \
+        "$COMPOSER_TAGGED_IMAGE" \
+        /workspace/cicd/run_tests.sh
   - id : 'Copy DAGs, data, and requirements to all Composer environments'
     name: gcr.io/cloud-builders/gcloud
     script: |
@@ -129,6 +138,7 @@ steps:
     env:
       - MANAGED_AIRFLOW_LOCATIONS=$_MANAGED_AIRFLOW_LOCATIONS
 options:
+  machineType: 'E2_HIGHCPU_32'
   logging: CLOUD_LOGGING_ONLY
 substitutions:
   _MANAGED_AIRFLOW_LOCATIONS: 'us-east4 us-central1'
