@@ -26,6 +26,13 @@ def dagbag():
     sys.path.insert(0, dags_path)
     import airflow  # Used only to check version for backward compatibility
 
+    # Pre-import provider modules so parsing duration tests isolate DAG structure time
+    try:
+        import airflow.providers.cncf.kubernetes.operators.pod
+        import airflow.providers.google.cloud.operators.bigquery
+    except ImportError:
+        pass
+
     kwargs = {"include_examples": False} if airflow.__version__.startswith("2.") else {}
     yield DagBag(dag_folder=dags_path, **kwargs)
 
@@ -93,8 +100,8 @@ def test_dagbag_parse_times(dagbag):
 
 def test_dag_tags_example(dagbag):
     """Example of testing that a specific DAG has the expected tags."""
-    dag = dagbag.get_dag("gcs_file_disk_preprocessing")
-    assert dag is not None, "DAG gcs_file_disk_preprocessing not found."
+    dag = dagbag.get_dag("sleepy_dynamic_task_mapping")
+    assert dag is not None, "DAG sleepy_dynamic_task_mapping not found."
     assert "gcs" in dag.tags
     assert "kubernetes" in dag.tags
 
