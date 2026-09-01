@@ -16,8 +16,8 @@
 import datetime
 
 import pendulum
-from airflow.decorators import dag, task, task_group
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from airflow.sdk import dag, task, task_group
 from kubernetes.client import models as k8s
 
 
@@ -26,6 +26,7 @@ from kubernetes.client import models as k8s
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
     max_active_tasks=100,
+    tags=["gcs", "kubernetes"],
     default_args={
         "retries": 10,
         "retry_delay": datetime.timedelta(seconds=10),

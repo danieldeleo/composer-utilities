@@ -14,9 +14,7 @@
 from copy import deepcopy
 
 import pendulum
-from airflow.decorators import dag, task, task_group
-from airflow.models.param import Param
-from airflow.utils.task_group import TaskGroup
+from airflow.sdk import Param, TaskGroup, dag, task, task_group
 
 
 class CustomSleepyTaskGroup(TaskGroup):
