@@ -11,25 +11,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Example DAG demonstrating GCS preprocessing using KubernetesPodOperator."""
+
 import datetime
 
 import pendulum
-from airflow import DAG
-from airflow.operators.empty import EmptyOperator
+from airflow.decorators import dag
+from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 
-with DAG(
-    dag_id="airflow2_example_schedule_interval",
-    schedule="@daily",
+
+@dag(
+    dag_id="gcs_file_disk_preprocessing",
+    schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    tags=["gcs", "kubernetes"],
     default_args={
         "retries": 2,
         "retry_delay": datetime.timedelta(minutes=5),
     },
-    tags=["airflow2", "compatibility_test"],
-) as dag:
-    start = EmptyOperator(task_id="start_task")
+)
+def gcs_file_disk_preprocessing():
+    KubernetesPodOperator(
+        task_id="preprocess_gcs_files",
+        name="gcs-file-disk-preprocessing",
+        namespace="composer-user-workloads",
+        image="gcr.io/google.com/cloudsdktool/google-cloud-cli:latest",
+        cmds=["bash", "-cx"],
+        arguments=["echo Preprocessing GCS files..."],
+    )
 
-    end = EmptyOperator(task_id="end_task")
 
-    start >> end
+gcs_file_disk_preprocessing()
