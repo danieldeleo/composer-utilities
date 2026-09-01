@@ -26,6 +26,7 @@ from kubernetes.client import models as k8s
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
     max_active_tasks=100,
+    tags=["example", "kubernetes"],
     default_args={
         "retries": 10,
         "retry_delay": datetime.timedelta(seconds=10),
