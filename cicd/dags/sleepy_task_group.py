@@ -51,6 +51,7 @@ class CustomSleepyTaskGroup(TaskGroup):
     schedule=None,
     start_date=pendulum.datetime(2026, 1, 1, tz="UTC"),
     catchup=False,
+    tags=["taskgroup", "test", "dynamic_task_mapping"],
     params={
         "seconds_to_sleep": Param(
             1,

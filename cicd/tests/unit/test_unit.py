@@ -93,10 +93,11 @@ def test_dagbag_parse_times(dagbag):
 
 def test_dag_tags_example(dagbag):
     """Example of testing that a specific DAG has the expected tags."""
-    dag = dagbag.get_dag("gcs_file_disk_preprocessing")
-    assert dag is not None, "DAG gcs_file_disk_preprocessing not found."
-    assert "gcs" in dag.tags
-    assert "kubernetes" in dag.tags
+    dag = dagbag.get_dag("sleepy_task_group")
+    assert dag is not None, "DAG sleepy_task_group not found."
+    assert "taskgroup" in dag.tags
+    assert "test" in dag.tags
+    assert "dynamic_task_mapping" in dag.tags
 
 
 def test_dag_default_args_example(dagbag):
