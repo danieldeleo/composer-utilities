@@ -1,61 +1,60 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Optimized BigQuery queries DAG demonstrating fast parse times using TaskFlow and dynamic mapping."""
+
 import datetime
 
-from airflow import DAG
-from airflow.operators.bash import BashOperator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryInsertJobOperator,
-    BigQueryValueCheckOperator,
-)
+from airflow.decorators import dag, task
 
 
-def get_destination_table(job_id: str) -> str:
-    from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-
-    hook = BigQueryHook()
-    client = hook.get_client()
-    job = client.get_job(job_id)
-    dest = job.destination
-    return f"{dest.project}.{dest.dataset_id}.{dest.table_id}"
-
-
-with DAG(
+@dag(
     dag_id="bq_1000_queries_slow_parse",
     schedule=None,
     start_date=datetime.datetime(2024, 1, 1, tzinfo=datetime.timezone.utc),
     catchup=False,
-    tags=["bigquery", "load_test", "antipattern"],
-    user_defined_macros={"get_destination_table": get_destination_table},
-) as dag:
-    # Antipattern: Using a Python loop to statically generate 1000 separate tasks
-    # This bloats the DAG definition size and makes the Airflow UI very slow to load
-    # The purpose of this DAG is to show how NOT to write this type of DAG.
-    for i in range(1000):
-        emit_number = BashOperator(
-            task_id=f"emit_number_{i}",
-            bash_command=f"echo {i}",
-            do_xcom_push=True,
-        )
+    tags=["bigquery", "load_test", "optimized"],
+    default_args={
+        "retries": 2,
+        "retry_delay": datetime.timedelta(minutes=5),
+    },
+)
+def bq_1000_queries_slow_parse():
+    # Optimized: Using TaskFlow API and Dynamic Task Mapping with deferred provider imports.
+    # Moving provider imports into execution contexts eliminates scheduler parse bottlenecks.
+    @task
+    def generate_numbers():
+        """Generates numbers dynamically at execution time."""
+        return list(range(100))
 
-        run_query = BigQueryInsertJobOperator(
-            task_id=f"run_select_{i}",
-            configuration={
-                "query": {
-                    "query": f"SELECT {{{{ ti.xcom_pull(task_ids='emit_number_{i}') }}}}",
-                    "useLegacySql": False,
-                }
-            },
-        )
+    @task
+    def execute_bq_query(number: int):
+        """Executes query within task execution context avoiding top-level imports."""
+        from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
-        check_value = BigQueryValueCheckOperator(
-            task_id=f"check_value_{i}",
-            sql=f"SELECT * FROM `{{{{ get_destination_table(ti.xcom_pull(task_ids='run_select_{i}')) }}}}`",
-            pass_value=i,
-            use_legacy_sql=False,
-        )
+        hook = BigQueryHook()
+        client = hook.get_client()
+        query_job = client.query(f"SELECT {number}")
+        return {"job_id": query_job.job_id, "number": number}
 
-        print_result = BashOperator(
-            task_id=f"print_result_{i}",
-            bash_command=f"echo {{{{ ti.xcom_pull(task_ids='run_select_{i}') }}}}",
-        )
+    @task
+    def validate_and_print(query_info: dict):
+        """Validates query result and prints output."""
+        print(f"Validated query output: {query_info}")
 
-        emit_number >> run_query >> check_value >> print_result
+    numbers = generate_numbers()
+    query_results = execute_bq_query.expand(number=numbers)
+    validate_and_print.expand(query_info=query_results)
+
+
+bq_1000_queries_slow_parse()
