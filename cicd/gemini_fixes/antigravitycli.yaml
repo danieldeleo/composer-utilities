@@ -137,7 +137,7 @@ substitutions:
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  machineType: 'E2_HIGHCPU_8'
+  machineType: 'E2_HIGHCPU_32'
   dynamicSubstitutions: true
 
 timeout: 14400s # 4 hours
