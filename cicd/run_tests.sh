@@ -39,6 +39,7 @@ export PATH=$PYTHONUSERBASE/bin:$PATH
 # Set up the Airflow home directory
 export AIRFLOW_HOME=/home/airflow/airflow
 export AIRFLOW__CORE__LOAD_EXAMPLES=False
+export PYTHONDONTWRITEBYTECODE=1
 
 # Capture currently installed packages as constraints for the upcoming install
 pip list --format=freeze > /tmp/constraints.txt
@@ -59,9 +60,12 @@ fi
 
 # In Airflow 3, some internal components (like the Simple Auth Manager) may attempt to initialize 
 # or "build" UI assets on the fly if they aren't present. Since Airflow is installed in a system-level
-# directory (/opt/python3.11/...), the airflow user doesn't have the rights to create new folders there.
-sudo mkdir -p /opt/python3.11/lib/python3.11/site-packages/airflow/api_fastapi/auth/managers/simple/ui/dist
-sudo chown -R airflow: /opt/python3.11/lib/python3.11/site-packages/airflow/api_fastapi/auth/managers/simple/ui/dist
+# directory, ensure the directory exists and is owned by the airflow user.
+SITE_PACKAGES=$(python3 -c "import site; print(site.getsitepackages()[0])" 2>/dev/null || echo "/opt/python3.11/lib/python3.11/site-packages")
+if [ -d "$SITE_PACKAGES/airflow" ]; then
+    sudo mkdir -p "$SITE_PACKAGES/airflow/api_fastapi/auth/managers/simple/ui/dist" || true
+    sudo chown -R airflow: "$SITE_PACKAGES/airflow/api_fastapi/auth/managers/simple/ui/dist" || true
+fi
 
 # Set basic auth if testing Airflow 2 
 export AIRFLOW__API__AUTH_BACKENDS=airflow.api.auth.backend.basic_auth
@@ -77,13 +81,20 @@ echo "Database is up!"
 
 # Wait for the Airflow Webserver to be ready to accept REST API connections
 echo "Waiting for Airflow Webserver to be ready..."
-until curl -sf http://localhost:8080 > /dev/null; do
+RETRIES=60
+until curl -sf http://localhost:8080 > /dev/null || [ $RETRIES -eq 0 ]; do
     sleep 2
+    RETRIES=$((RETRIES - 1))
 done
+
+if [ $RETRIES -eq 0 ]; then
+    echo "Error: Airflow Webserver failed to start within 120 seconds."
+    exit 1
+fi
 echo "Webserver is up!"
 
 # List the DAGs to verify they are parsed without errors
 airflow dags list
 
 # Run pytest to execute the tests in the workspace
-python3 -m pytest -vv -s "$TESTS_DIR"
+python3 -m pytest -o cache_dir=/tmp/.pytest_cache -vv -s "$TESTS_DIR"

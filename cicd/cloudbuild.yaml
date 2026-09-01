@@ -33,7 +33,6 @@ steps:
       set -eo pipefail
       python3 /workspace/cicd/get_composer_tagged_image.py > /workspace/.composer_image_tag
       echo "Resolved Composer tagged image: $(cat /workspace/.composer_image_tag)"
-
   - id : 'Run unit and integration tests on Airflow DAGs'
     name: 'gcr.io/cloud-builders/docker'
     waitFor:
@@ -55,6 +54,8 @@ steps:
         /workspace/cicd/run_tests.sh
   - id : 'Copy DAGs, data, and requirements to all Composer environments'
     name: gcr.io/cloud-builders/gcloud
+    waitFor:
+      - 'Run unit and integration tests on Airflow DAGs'
     script: |
       #!/usr/bin/env bash
       
